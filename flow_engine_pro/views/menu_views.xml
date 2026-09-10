@@ -27,18 +27,25 @@
                   groups="group_flow_user"
                   sequence="20"/>
 
-        <!-- Manager-only: global typography/border/canvas defaults. Was
-             gated on base.group_system alone; that group now implies
-             group_flow_manager too (see flow_security_groups.xml), so
-             every existing System Administrator keeps access, while a
-             Flow Manager who isn't a full System Admin also gets in
-             (user request 2026-09-09: proper per-app security groups
-             instead of piggybacking on a core Odoo group). -->
+        <!-- Correction 2026-09-10: this was briefly gated on
+             group_flow_manager alone, on the assumption that would let a
+             Flow Manager who isn't a System Administrator in too. That
+             doesn't work and isn't safe to make work: the action's
+             res_model is res.config.settings, Odoo core's SHARED
+             settings model, and every Odoo install restricts it to
+             base.group_system only (base/security/ir.model.access.csv) -
+             not something this module controls. Granting a non-admin
+             group real access to res.config.settings would expose every
+             other installed module's settings, not just this one's, so
+             the menu goes back to base.group_system. group_flow_manager
+             still matters for diagram-level delete rights - see
+             ir.model.access.csv - it just can't unlock this particular
+             page. -->
         <menuitem id="menu_workflow_settings"
                   name="Settings"
                   parent="menu_workflow_engine_root"
                   action="action_flow_engine_settings"
-                  groups="group_flow_manager"
+                  groups="base.group_system"
                   sequence="100"/>
     </data>
 </odoo>

@@ -29,22 +29,28 @@
             <field name="comment">Can open Flow Engine Pro and create/edit diagrams.</field>
         </record>
 
-        <!-- Manager: everything a User can do, plus delete diagrams and
-             access the global Settings (typography/border/canvas
-             defaults). Implies User, so assigning Manager alone is
-             enough. -->
+        <!-- Manager: everything a User can do, plus delete diagrams.
+             Implies User, so assigning Manager alone is enough.
+             Correction 2026-09-10: this does NOT unlock the global
+             Settings page - that action's res_model is
+             res.config.settings, which every Odoo install restricts to
+             base.group_system only (a core ACL this module doesn't
+             control and shouldn't override, since it's shared by every
+             installed module's settings, not just this one's). The
+             Settings menu stays gated on base.group_system directly -
+             see menu_views.xml. -->
         <record id="group_flow_manager" model="res.groups">
             <field name="name">Manager</field>
             <field name="privilege_id" ref="privilege_flow_engine"/>
             <field name="implied_ids" eval="[(4, ref('group_flow_user'))]"/>
-            <field name="comment">Can delete diagrams and change Flow Engine Pro's global Settings.</field>
+            <field name="comment">Can delete diagrams.</field>
         </record>
 
-        <!-- Every existing Odoo System Administrator keeps working exactly
-             as before this security tightening (Settings used to be
-             gated on base.group_system alone) - they automatically also
-             become Flow Engine Managers. Regular employees need one of
-             the two groups above explicitly assigned to them. -->
+        <!-- Every System Administrator automatically becomes a Flow
+             Engine Manager too (can delete diagrams, in addition to the
+             Settings access base.group_system already carries on its
+             own). Regular employees need one of the two groups above
+             explicitly assigned to them. -->
         <record id="base.group_system" model="res.groups">
             <field name="implied_ids" eval="[(4, ref('group_flow_manager'))]"/>
         </record>
