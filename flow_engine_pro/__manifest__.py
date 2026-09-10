@@ -35,6 +35,7 @@
             'flow_engine_pro/static/src/components/toolbar/toolbar.xml',
             'flow_engine_pro/static/src/components/canvas/canvas_routing.js',
             'flow_engine_pro/static/src/components/canvas/canvas_layout.js',
+            'flow_engine_pro/static/src/components/canvas/canvas_interaction.js',
             'flow_engine_pro/static/src/components/canvas/canvas.js',
             'flow_engine_pro/static/src/components/canvas/canvas.xml',
             'flow_engine_pro/static/src/flow_ide/flow_help_dialog.js',
