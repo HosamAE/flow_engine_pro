@@ -98,6 +98,14 @@
                             <field name="flow_capture_local_download"/>
                         </setting>
                     </block>
+                    <block title="Search" name="flow_search">
+                        <setting string="Sidebar Search" help="Search a shape's name across every diagram from the sidebar - jumps to and pulses the first match, and shows how many shapes match on each diagram's row." id="flow_enable_sidebar_search_setting">
+                            <field name="flow_enable_sidebar_search"/>
+                        </setting>
+                        <setting string="Diagram Search" help="Search a shape's name within the currently open diagram only, from the canvas header - highlights every match instead of jumping to one." id="flow_enable_header_search_setting">
+                            <field name="flow_enable_header_search"/>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>

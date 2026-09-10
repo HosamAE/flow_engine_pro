@@ -153,3 +153,17 @@ class ResConfigSettings(models.TransientModel):
     flow_capture_local_download = fields.Boolean(
         string='Capture Also Downloads Locally', default=True,
         config_parameter='flow_engine_pro.capture_local_download')
+
+    # ── Search ─────────────────────────────────────────────────────────────
+    # Two independent search tools, each switchable on its own (user
+    # request 2026-09-10): the sidebar one searches shape names across
+    # EVERY diagram (jumps + pulses the first match, and annotates each
+    # diagram row with how many of its shapes match); the header one is
+    # scoped to only the diagram currently open, and highlights every
+    # match in it instead of jumping anywhere.
+    flow_enable_sidebar_search = fields.Boolean(
+        string='Sidebar Search (across all diagrams)', default=True,
+        config_parameter='flow_engine_pro.enable_sidebar_search')
+    flow_enable_header_search = fields.Boolean(
+        string='Diagram Search (current diagram only)', default=True,
+        config_parameter='flow_engine_pro.enable_header_search')

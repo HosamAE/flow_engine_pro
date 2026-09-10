@@ -98,6 +98,20 @@ class WorkflowDiagram(models.Model):
     override_canvas_bg_style = fields.Selection(BG_STYLE_SELECTION, string='Canvas Background Style')
     override_canvas_bg_color = fields.Char(string='Canvas Background Color')
 
+    @api.model
+    def get_search_settings(self):
+        """Whether the two search tools are switched on - global-only (no
+        per-diagram override makes sense for a UI element that isn't part
+        of the diagram itself), and needed before any diagram is loaded
+        (the sidebar search box shows even with nothing open yet), so this
+        is its own lightweight call instead of living inside
+        get_effective_settings() below (user request 2026-09-10)."""
+        icp = self.env['ir.config_parameter'].sudo()
+        return {
+            'enable_sidebar_search': icp.get_param('flow_engine_pro.enable_sidebar_search', 'True') == 'True',
+            'enable_header_search': icp.get_param('flow_engine_pro.enable_header_search', 'True') == 'True',
+        }
+
     def get_effective_settings(self):
         """Merges this diagram's overrides on top of the global Flow Engine
         Pro settings (ir.config_parameter) - called from the Flow IDE (JS)

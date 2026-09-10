@@ -128,6 +128,8 @@ export class FlowCanvas extends Component {
     this.inlineEditor = useRef('inlineEditor');
     this.notification = useService('notification');
     this.camera = { x: 0, y: 0, zoom: 1 };
+    this._highlightNodeIds = new Set();
+    this._stickyHighlightNodeIds = new Set();
     this.state = useState({
       isDraggingCanvas: false,
       isDraggingNode: false,
@@ -202,6 +204,9 @@ export class FlowCanvas extends Component {
           captureSnapshotDataUrl: () => this.canvasRef.el.toDataURL('image/png'),
           fitToContent: () => this._fitToContent(),
           pulseNode: (nodeUuid) => this.pulseNode(nodeUuid),
+          setHighlightedNodes: (nodeIds) => this.setHighlightedNodes(nodeIds),
+          toggleStickyHighlight: (nodeId) => this.toggleStickyHighlight(nodeId),
+          isNodeStickyHighlighted: (nodeId) => this.isNodeStickyHighlighted(nodeId),
         });
       }
       // The "default" camera state should mean "the whole diagram is in
@@ -351,6 +356,53 @@ export class FlowCanvas extends Component {
     }
     this.ctx.stroke();
     this.ctx.restore();
+  }
+
+  // Static (non-fading) highlight rings, shared by three callers (user
+  // request 2026-09-10): double-clicking a shape highlights just that one
+  // while its Properties are open; the diagram-scoped header search
+  // highlights every match as you type; a dedicated "pin" toggle in the
+  // Properties panel keeps a highlight sticking around independently of
+  // selection, in its own set so normal deselection never clears it.
+  setHighlightedNodes(nodeIds) {
+    this._highlightNodeIds = new Set(nodeIds || []);
+  }
+
+  toggleStickyHighlight(nodeId) {
+    if (!this._stickyHighlightNodeIds) this._stickyHighlightNodeIds = new Set();
+    if (this._stickyHighlightNodeIds.has(nodeId)) this._stickyHighlightNodeIds.delete(nodeId);
+    else this._stickyHighlightNodeIds.add(nodeId);
+  }
+
+  isNodeStickyHighlighted(nodeId) {
+    return !!(this._stickyHighlightNodeIds && this._stickyHighlightNodeIds.has(nodeId));
+  }
+
+  _drawStaticHighlights() {
+    const transient = this._highlightNodeIds;
+    const sticky = this._stickyHighlightNodeIds;
+    if ((!transient || !transient.size) && (!sticky || !sticky.size)) return;
+    const nodes = this.props.canvasData.nodes || [];
+    const draw = (id, color) => {
+      const node = nodes.find((n) => n.id === id);
+      if (!node) return;
+      const w = node.width || 120;
+      const h = node.height || 50;
+      const pad = 7;
+      this.ctx.save();
+      this.ctx.strokeStyle = color;
+      this.ctx.lineWidth = 3 / this.camera.zoom;
+      this.ctx.beginPath();
+      if (this.ctx.roundRect) {
+        this.ctx.roundRect(node.x - pad, node.y - pad, w + pad * 2, h + pad * 2, 10);
+      } else {
+        this.ctx.rect(node.x - pad, node.y - pad, w + pad * 2, h + pad * 2);
+      }
+      this.ctx.stroke();
+      this.ctx.restore();
+    };
+    if (transient) for (const id of transient) draw(id, 'rgba(56, 189, 248, 0.9)');
+    if (sticky) for (const id of sticky) draw(id, 'rgba(244, 114, 182, 0.9)');
   }
 
   // Frames the whole diagram in view - this IS the "default" camera
@@ -658,6 +710,7 @@ export class FlowCanvas extends Component {
       this.drawEdges();
       this.drawNodes();
       this._drawPulseHighlight();
+      this._drawStaticHighlights();
 
       if (this.state.isMarquee) this.drawMarquee();
       if (this.state.isDraggingNode && this.state.alignmentGuides.length) this.drawAlignmentGuides();
@@ -1325,6 +1378,12 @@ export class FlowCanvas extends Component {
     const my = ev.clientY;
     const worldPos = this.screenToWorld(mx, my);
     this.state.lastMouse = { x: mx, y: my };
+    // Any new click clears a double-click's transient highlight (leaving
+    // the shape, per user request 2026-09-10) - a following dblclick
+    // re-applies it right after, so a genuine double-click still ends up
+    // highlighted despite this running on both of its two mousedowns.
+    // The sticky (pinned) highlight lives in a separate set, untouched.
+    this._highlightNodeIds.clear();
 
     // PHASE 1: System Actions (Pan)
     if (ev.button === 1 || (this.state.spaceDown && ev.button === 0)) {
@@ -2495,6 +2554,7 @@ export class FlowCanvas extends Component {
     const hitNode = this._findHitNode(worldPos);
     if (hitNode) {
       if (this.props.setActiveNodeId) this.props.setActiveNodeId(hitNode.id);
+      this.setHighlightedNodes([hitNode.id]);
       return;
     }
     const hitEdge = this._findHitEdge(worldPos);

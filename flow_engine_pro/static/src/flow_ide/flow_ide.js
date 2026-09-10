@@ -59,6 +59,12 @@ export class FlowIDE extends Component {
       // loadDiagram() - FlowCanvas falls back to its own defaults until
       // this resolves, so it's fine to start empty.
       flowSettings: {},
+      // Defaults match get_search_settings()'s own defaults, so nothing
+      // flickers hidden before that RPC resolves.
+      searchSettings: { enable_sidebar_search: true, enable_header_search: true },
+      searchQuery: '',
+      sidebarSearchCounts: {}, // diagramId -> match count, for the live per-row badge
+      headerSearchQuery: '',
     });
 
     const handleKeyDown = (ev) => {
@@ -87,6 +93,9 @@ export class FlowIDE extends Component {
     };
 
     onWillStart(async () => {
+      this.orm.call('workflow.diagram', 'get_search_settings', []).then((settings) => {
+        this.state.searchSettings = settings;
+      });
       await this.loadSidebarDiagrams();
 
       // Auto-load diagram from URL hash if present
@@ -629,6 +638,60 @@ export class FlowIDE extends Component {
   // Finds a shape by name across every diagram (not just the open one -
   // workflow.node is the SQL search index kept in sync on every save),
   // opens its diagram if it isn't already open, then pans + pulses it.
+  // Live (debounced) per-row match counts for the sidebar search, so you
+  // can see which diagrams even contain a match before jumping to one
+  // (user request 2026-09-10). Separate from searchAndPulse(), which only
+  // fires on Enter.
+  onSidebarSearchInput() {
+    clearTimeout(this._sidebarSearchDebounce);
+    this._sidebarSearchDebounce = setTimeout(() => this._computeSidebarSearchCounts(), 250);
+  }
+
+  async _computeSidebarSearchCounts() {
+    const query = (this.state.searchQuery || '').trim();
+    if (!query) {
+      this.state.sidebarSearchCounts = {};
+      return;
+    }
+    const result = await this.orm.webReadGroup('workflow.node', [['name', 'ilike', query]], ['diagram_id'], ['__count']);
+    const counts = {};
+    for (const g of result.groups || []) {
+      const diagramId = g.diagram_id && g.diagram_id[0];
+      if (diagramId) counts[diagramId] = g.__count;
+    }
+    this.state.sidebarSearchCounts = counts;
+  }
+
+  // Diagram-scoped search (header): purely client-side, filters the
+  // ALREADY-LOADED canvas data of the open diagram and highlights every
+  // match at once instead of jumping to one (user request 2026-09-10).
+  onHeaderSearchInput() {
+    const query = (this.state.headerSearchQuery || '').trim().toLowerCase();
+    if (!this._canvasApi) return;
+    if (!query) {
+      this._canvasApi.setHighlightedNodes([]);
+      return;
+    }
+    const matches = (this.state.canvasData.nodes || []).filter(
+      (n) => (n.label || '').toLowerCase().includes(query)
+    );
+    this._canvasApi.setHighlightedNodes(matches.map((n) => n.id));
+  }
+
+  // Pin/unpin the currently active shape's highlight so it stays lit
+  // even after it's deselected, until toggled off again (user request
+  // 2026-09-10) - kept independent of the transient double-click
+  // highlight, in its own set inside canvas.js.
+  toggleStickyHighlight() {
+    if (!this._canvasApi || !this.state.activeNodeId) return;
+    this._canvasApi.toggleStickyHighlight(this.state.activeNodeId);
+  }
+
+  get isActiveNodeStickyHighlighted() {
+    if (!this._canvasApi || !this.state.activeNodeId) return false;
+    return this._canvasApi.isNodeStickyHighlighted(this.state.activeNodeId);
+  }
+
   async searchAndPulse() {
     const query = (this.state.searchQuery || '').trim();
     if (!query) return;
@@ -665,6 +728,10 @@ export class FlowIDE extends Component {
   async loadDiagram(diagramId) {
     this.state.diagramId = diagramId;
     this.state.activeNodeId = null;
+    // The header search is scoped to whichever diagram is open - a stale
+    // query/highlight from the previous one shouldn't carry over.
+    this.state.headerSearchQuery = '';
+    if (this._canvasApi) this._canvasApi.setHighlightedNodes([]);
     this.orm.call('workflow.diagram', 'get_effective_settings', [[diagramId]]).then((settings) => {
       this.state.flowSettings = settings;
     });
