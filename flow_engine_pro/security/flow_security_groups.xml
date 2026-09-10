@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Odoo 19: groups are grouped by res.groups.privilege, not
+             directly by ir.module.category (category_id moved onto the
+             privilege) - matches highnox_floor_plan/highnox_esign's own
+             port notes. Dedicated category+privilege so these groups show
+             under Settings > Users & Companies > Groups as their own
+             section, instead of riding on base.group_user's blanket
+             access (user request 2026-09-09: "make sure it properly
+             follows Odoo's security conventions - read/write/create"). -->
+        <record id="module_category_flow_engine" model="ir.module.category">
+            <field name="name">Flow Engine Pro</field>
+            <field name="description">Access to the Flow Engine Pro diagram editor.</field>
+            <field name="sequence">50</field>
+        </record>
+
+        <record id="privilege_flow_engine" model="res.groups.privilege">
+            <field name="name">Flow Engine Pro</field>
+            <field name="category_id" ref="module_category_flow_engine"/>
+            <field name="sequence">50</field>
+        </record>
+
+        <!-- User: can open the IDE, create/edit diagrams and their own
+             content, but not delete them - deletion is a Manager action. -->
+        <record id="group_flow_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="privilege_id" ref="privilege_flow_engine"/>
+            <field name="comment">Can open Flow Engine Pro and create/edit diagrams.</field>
+        </record>
+
+        <!-- Manager: everything a User can do, plus delete diagrams and
+             access the global Settings (typography/border/canvas
+             defaults). Implies User, so assigning Manager alone is
+             enough. -->
+        <record id="group_flow_manager" model="res.groups">
+            <field name="name">Manager</field>
+            <field name="privilege_id" ref="privilege_flow_engine"/>
+            <field name="implied_ids" eval="[(4, ref('group_flow_user'))]"/>
+            <field name="comment">Can delete diagrams and change Flow Engine Pro's global Settings.</field>
+        </record>
+
+        <!-- Every existing Odoo System Administrator keeps working exactly
+             as before this security tightening (Settings used to be
+             gated on base.group_system alone) - they automatically also
+             become Flow Engine Managers. Regular employees need one of
+             the two groups above explicitly assigned to them. -->
+        <record id="base.group_system" model="res.groups">
+            <field name="implied_ids" eval="[(4, ref('group_flow_manager'))]"/>
+        </record>
+    </data>
+</odoo>

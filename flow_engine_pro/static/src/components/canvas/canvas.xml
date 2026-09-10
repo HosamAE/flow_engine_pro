@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="flow_engine_pro.FlowCanvas" owl="1">
+        <div class="o_flow_canvas_wrapper w-100 h-100 position-absolute overflow-hidden" 
+             style="background: #ffffff;"
+             t-on-mousedown="onMouseDown"
+             t-on-mousemove="onMouseMove"
+             t-on-mouseup="onMouseUp"
+             t-on-dblclick="onDblClick">
+            
+            <canvas t-ref="canvas" 
+                    t-att-style="props.mode === 'pan' ? 'cursor: grab;' : props.mode === 'draw_pen' ? 'cursor: crosshair;' : 'cursor: default;'"
+                    class="d-block"></canvas>
+
+            <!-- Inline Text Editor Overlay -->
+            <textarea t-if="state.isEditingText"
+                      t-ref="inlineEditor"
+                      class="position-absolute border-0"
+                      t-att-style="state.editorStyle"
+                      t-on-blur="onEditorBlur"
+                      t-on-keydown="onEditorKeyDown"
+                      t-model="state.editorValue"></textarea>
+
+
+
+            <!-- Long-press Shape Picker -->
+            <t t-if="state.shapePickerNode">
+                <div class="position-fixed top-0 start-0 w-100 h-100" style="z-index: 1400;" t-on-click="() => this._closeShapePicker()"></div>
+                <div class="position-fixed bg-white border rounded-3 shadow-lg p-2"
+                     t-attf-style="left: {{ state.shapePickerPos.x }}px; top: {{ state.shapePickerPos.y }}px; transform: translate(-50%, -110%); z-index: 1401; width: {{ state.shapePickerNode.isCommentCategory ? 260 : 220 }}px;"
+                     t-on-click.stop="() => {}">
+                    <div class="d-flex justify-content-between px-1 pb-2 mb-1 border-bottom">
+                        <span class="fw-bold text-dark" style="font-size: 11px;">
+                            <t t-esc="state.shapePickerNode.isCommentCategory ? 'Change Comment Shape' : 'Change Flow Shape'"/>
+                        </span>
+                        <i class="fa fa-times text-muted cursor-pointer" t-on-click="() => this._closeShapePicker()"></i>
+                    </div>
+                    <!-- Flow shapes only ever offer the 4 Flow shapes; Comment
+                         shapes only ever offer the Comment shape library -
+                         the two sets are never mixed, and there is no
+                         toggle here to convert between the two categories
+                         (that's decided only by which toolbar button
+                         created the node). -->
+                    <t t-if="!state.shapePickerNode.isCommentCategory">
+                        <div class="d-flex justify-content-around px-1 pb-1">
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Start / End" t-on-click="() => this._setNodeShape('start_end')">
+                                <div class="flow-shape-icon flow-shape-oval" style="border-color: #28a745; background: rgba(40,167,69,0.15);"></div>
+                            </div>
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Decision" t-on-click="() => this._setNodeShape('decision')">
+                                <div class="flow-shape-icon flow-shape-diamond" style="border-color: #ffc107; background: rgba(255,193,7,0.15);"></div>
+                            </div>
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Process" t-on-click="() => this._setNodeShape('process')">
+                                <div class="flow-shape-icon flow-shape-rect" style="border-color: #0d6efd; background: rgba(13,110,253,0.12);"></div>
+                            </div>
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="I/O" t-on-click="() => this._setNodeShape('data')">
+                                <div class="flow-shape-icon flow-shape-para" style="border-color: #6f42c1; background: rgba(111,66,193,0.12);"></div>
+                            </div>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="d-flex flex-wrap justify-content-around px-1 pb-1" style="row-gap: 4px;">
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Rectangle" t-on-click="() => this._setNodeShape('process')">
+                                <div class="flow-shape-icon flow-shape-rect" style="border-style: dashed; border-color: #64748b; background: rgba(100,116,139,0.12);"></div>
+                            </div>
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Diamond" t-on-click="() => this._setNodeShape('decision')">
+                                <div class="flow-shape-icon flow-shape-diamond" style="border-style: dashed; border-color: #64748b; background: rgba(100,116,139,0.12);"></div>
+                            </div>
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Triangle" t-on-click="() => this._setNodeShape('triangle')">
+                                <div class="flow-shape-icon flow-shape-triangle" style="background: #64748b;"></div>
+                            </div>
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Parallelogram" t-on-click="() => this._setNodeShape('data')">
+                                <div class="flow-shape-icon flow-shape-para" style="border-style: dashed; border-color: #64748b; background: rgba(100,116,139,0.12);"></div>
+                            </div>
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Trapezoid" t-on-click="() => this._setNodeShape('trapezoid')">
+                                <div class="flow-shape-icon flow-shape-trapezoid" style="background: #64748b;"></div>
+                            </div>
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Pentagon" t-on-click="() => this._setNodeShape('pentagon')">
+                                <div class="flow-shape-icon flow-shape-pentagon" style="background: #64748b;"></div>
+                            </div>
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Hexagon" t-on-click="() => this._setNodeShape('hexagon')">
+                                <div class="flow-shape-icon flow-shape-hexagon" style="background: #64748b;"></div>
+                            </div>
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Star" t-on-click="() => this._setNodeShape('star')">
+                                <div class="flow-shape-icon flow-shape-star" style="background: #64748b;"></div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </t>
+
+            <!-- Hover Tooltip (Subtle Description) -->
+            <t t-set="hoverTarget" t-value="state.hoveredNodeId ? getNode(state.hoveredNodeId) : (state.hoveredEdgeId ? getEdge(state.hoveredEdgeId) : null)" />
+            <div t-if="hoverTarget and hoverTarget.description" class="hover-tooltip shadow border p-2 bg-white"
+                 t-attf-style="position: fixed; left: {{ state.lastMouse.x + 15 }}px; top: {{ state.lastMouse.y + 15 }}px; z-index: 99; min-width: 180px; pointer-events: none; opacity: 0.95; border-radius: 6px; border-left: 3px solid {{ state.hoveredEdgeId ? '#6c757d' : '#0d6efd' }} !important;">
+                <div class="small fw-bold text-dark border-bottom pb-1 mb-1" t-esc="hoverTarget.label || (state.hoveredEdgeId ? 'Connector' : 'Node')"></div>
+                <div class="text-muted" style="font-size: 10px; line-height: 1.2;" t-esc="hoverTarget.description"></div>
+            </div>
+            
+            <style>
+                .hover-white:hover { color: white !important; }
+                .floating-formatter button { border: none !important; box-shadow: none !important; }
+                .x-small { font-size: 10px; }
+            </style>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="flow_engine_pro.FlowDiagramPreviewField">
+        <div class="o_flow_diagram_preview_field">
+            <div t-if="diagram" class="d-inline-block cursor-pointer border rounded shadow-sm overflow-hidden mb-2" style="width: 220px;" t-on-click="openDiagram" title="Open in Flow Engine Studio">
+                <img t-att-src="thumbnailUrl" class="w-100" style="display: block; aspect-ratio: 16 / 10; object-fit: cover; background-color: #f8fafc;" alt="Diagram snapshot"/>
+                <div class="px-2 py-1 small text-truncate bg-white border-top">
+                    <i class="fa fa-sitemap me-1 text-muted"></i>
+                    <t t-esc="diagram.display_name"/>
+                </div>
+            </div>
+            <Many2One t-props="m2oProps"/>
+        </div>
+    </t>
+</templates>

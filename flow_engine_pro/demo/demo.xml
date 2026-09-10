@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- One realistic sample diagram so a new install isn't an empty
+             sidebar - an "Employee Onboarding" approval flow, chosen because
+             it exercises every shape family (start/end, decision, process,
+             a labelled Yes/No fork, a merge, and a comment) without needing
+             any other Highnox module installed. -->
+        <record id="demo_diagram_onboarding" model="workflow.diagram">
+            <field name="name">Employee Onboarding (Demo)</field>
+            <field name="sequence">1</field>
+            <field name="canvas_data"><![CDATA[{"nodes": [{"id": "n1", "x": -60, "y": 0, "width": 120, "height": 50, "type": "start_end", "color": "#a8e6cf", "label": "New Hire Confirmed"}, {"id": "n2", "x": -70, "y": 130, "width": 140, "height": 80, "type": "decision", "color": "#ffffba", "label": "Manager Approved?"}, {"id": "n3", "x": -320, "y": 300, "width": 130, "height": 50, "type": "process", "color": "#bae1ff", "label": "Send Welcome Email"}, {"id": "n4", "x": -320, "y": 440, "width": 130, "height": 50, "type": "process", "color": "#bae1ff", "label": "IT Account Setup"}, {"id": "n5", "x": 180, "y": 300, "width": 130, "height": 50, "type": "process", "color": "#bae1ff", "label": "Notify HR - On Hold"}, {"id": "n6", "x": -70, "y": 590, "width": 120, "height": 50, "type": "start_end", "color": "#a8e6cf", "label": "Onboarding Complete"}, {"id": "c1", "x": -560, "y": 430, "width": 170, "height": 70, "type": "comment", "color": "#fff9c4", "label": "Auto-reminder to IT after 24h if unresolved", "isCommentCategory": true, "fontSize": "12"}], "edges": [{"id": "e1", "source": "n1", "target": "n2"}, {"id": "e2", "source": "n2", "target": "n3", "label": "Yes"}, {"id": "e3", "source": "n2", "target": "n5", "label": "No"}, {"id": "e4", "source": "n3", "target": "n4"}, {"id": "e5", "source": "n4", "target": "n6"}, {"id": "e6", "source": "n5", "target": "n6"}, {"id": "e7", "source": "n4", "target": "c1"}]}]]></field>
+        </record>
+
+        <!-- Second example, exercising the same shape families from a
+             different angle (a merge point instead of the first demo's
+             two independent End shapes), fully compliant with the
+             flowchart rules, with its own comment (user request
+             2026-09-09: "more than one demo record, real examples,
+             compliant, with comments"). -->
+        <record id="demo_diagram_it_ticket" model="workflow.diagram">
+            <field name="name">IT Support Ticket Triage (Demo)</field>
+            <field name="sequence">2</field>
+            <field name="canvas_data"><![CDATA[{"nodes": [{"id": "n1", "x": -60, "y": 0, "width": 140, "height": 50, "type": "start_end", "color": "#a8e6cf", "label": "Ticket Received"}, {"id": "n2", "x": -75, "y": 130, "width": 150, "height": 80, "type": "decision", "color": "#ffffba", "label": "Is it Urgent?"}, {"id": "n3", "x": -330, "y": 300, "width": 160, "height": 50, "type": "process", "color": "#bae1ff", "label": "Escalate to On-call Engineer"}, {"id": "n4", "x": 190, "y": 300, "width": 160, "height": 50, "type": "process", "color": "#bae1ff", "label": "Assign to Support Queue"}, {"id": "n5", "x": -70, "y": 450, "width": 140, "height": 50, "type": "process", "color": "#bae1ff", "label": "Resolve Issue"}, {"id": "n6", "x": -60, "y": 600, "width": 120, "height": 50, "type": "start_end", "color": "#a8e6cf", "label": "Ticket Closed"}, {"id": "c1", "x": -570, "y": 290, "width": 190, "height": 70, "type": "comment", "color": "#fff9c4", "label": "Page via on-call rotation, not email.", "isCommentCategory": true, "fontSize": "12"}], "edges": [{"id": "e1", "source": "n1", "target": "n2"}, {"id": "e2", "source": "n2", "target": "n3", "label": "Yes"}, {"id": "e3", "source": "n2", "target": "n4", "label": "No"}, {"id": "e4", "source": "n3", "target": "n5"}, {"id": "e5", "source": "n4", "target": "n5"}, {"id": "e6", "source": "n5", "target": "n6"}, {"id": "e7", "source": "n3", "target": "c1"}]}]]></field>
+        </record>
+
+        <!-- Third example: two decisions in sequence, converging back to
+             a single "Process Payment" merge point before splitting into
+             two distinct End shapes - the most structurally involved of
+             the three, still fully compliant. -->
+        <record id="demo_diagram_expense" model="workflow.diagram">
+            <field name="name">Expense Reimbursement Approval (Demo)</field>
+            <field name="sequence">3</field>
+            <field name="canvas_data"><![CDATA[{"nodes": [{"id": "n1", "x": -70, "y": 0, "width": 160, "height": 50, "type": "start_end", "color": "#a8e6cf", "label": "Expense Submitted"}, {"id": "n2", "x": -75, "y": 130, "width": 160, "height": 80, "type": "decision", "color": "#ffffba", "label": "Amount <= $200?"}, {"id": "n3", "x": -330, "y": 300, "width": 140, "height": 50, "type": "process", "color": "#bae1ff", "label": "Auto-Approve"}, {"id": "n4", "x": 190, "y": 300, "width": 150, "height": 50, "type": "process", "color": "#bae1ff", "label": "Manager Review"}, {"id": "n5", "x": 185, "y": 450, "width": 160, "height": 80, "type": "decision", "color": "#ffffba", "label": "Manager Approved?"}, {"id": "n6", "x": -75, "y": 620, "width": 160, "height": 50, "type": "process", "color": "#bae1ff", "label": "Process Payment"}, {"id": "n7", "x": -60, "y": 770, "width": 130, "height": 50, "type": "start_end", "color": "#a8e6cf", "label": "Reimbursed"}, {"id": "n8", "x": 440, "y": 620, "width": 180, "height": 50, "type": "process", "color": "#bae1ff", "label": "Notify Employee - Rejected"}, {"id": "n9", "x": 450, "y": 770, "width": 150, "height": 50, "type": "start_end", "color": "#a8e6cf", "label": "Request Closed"}, {"id": "c1", "x": 430, "y": 440, "width": 210, "height": 80, "type": "comment", "color": "#fff9c4", "label": "Requires two-level sign-off for amounts over $200 per finance policy.", "isCommentCategory": true, "fontSize": "12"}], "edges": [{"id": "e1", "source": "n1", "target": "n2"}, {"id": "e2", "source": "n2", "target": "n3", "label": "Yes"}, {"id": "e3", "source": "n2", "target": "n4", "label": "No"}, {"id": "e4", "source": "n4", "target": "n5"}, {"id": "e5", "source": "n5", "target": "n6", "label": "Yes"}, {"id": "e6", "source": "n5", "target": "n8", "label": "No"}, {"id": "e7", "source": "n6", "target": "n7"}, {"id": "e8", "source": "n8", "target": "n9"}, {"id": "e9", "source": "n5", "target": "c1"}, {"id": "e10", "source": "n3", "target": "n6"}]}]]></field>
+        </record>
+    </data>
+</odoo>

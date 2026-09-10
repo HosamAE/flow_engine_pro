@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Top Menu -->
+        <menuitem id="menu_workflow_engine_root"
+                  name="Flow Engine Pro"
+                  web_icon="flow_engine_pro,static/description/icon.png"
+                  groups="group_flow_user"
+                  sequence="200"/>
+
+        <!-- App Menu -->
+        <menuitem id="menu_workflow_diagrams"
+                  name="Diagrams"
+                  parent="menu_workflow_engine_root"
+                  action="action_open_flow_ide"
+                  groups="group_flow_user"
+                  sequence="10"/>
+
+        <!-- Native Odoo list/form for search, filters, group-by and
+             reporting - the canvas IDE (above) is the primary editing
+             surface, this is for finding/analyzing diagrams (user request
+             2026-09-09). -->
+        <menuitem id="menu_workflow_diagram_list"
+                  name="Reports"
+                  parent="menu_workflow_engine_root"
+                  action="action_workflow_diagram"
+                  groups="group_flow_user"
+                  sequence="20"/>
+
+        <!-- Manager-only: global typography/border/canvas defaults. Was
+             gated on base.group_system alone; that group now implies
+             group_flow_manager too (see flow_security_groups.xml), so
+             every existing System Administrator keeps access, while a
+             Flow Manager who isn't a full System Admin also gets in
+             (user request 2026-09-09: proper per-app security groups
+             instead of piggybacking on a core Odoo group). -->
+        <menuitem id="menu_workflow_settings"
+                  name="Settings"
+                  parent="menu_workflow_engine_root"
+                  action="action_flow_engine_settings"
+                  groups="group_flow_manager"
+                  sequence="100"/>
+    </data>
+</odoo>

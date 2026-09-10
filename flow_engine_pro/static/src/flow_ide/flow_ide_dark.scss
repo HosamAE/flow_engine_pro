@@ -1,0 +1,165 @@
+// ════════════════════════════════════════════════════════════════
+//  FLOW ENGINE PRO — Dark Mode Overrides
+//  Loaded via web.assets_web_dark — overrides :root variables only.
+//  Every component reads CSS vars, so this file is the single
+//  source of truth for the dark theme.
+// ════════════════════════════════════════════════════════════════
+
+:root {
+  // Surfaces
+  --fe-bg-page:        #0d1117;
+  --fe-bg-surface:     #161b22;
+  --fe-bg-sidebar:     #13181f;
+  --fe-bg-header:      #161b22;
+  --fe-bg-inspector:   #161b22;
+  --fe-bg-toolbar:     rgba(22, 27, 34, 0.96);
+  --fe-bg-canvas:      #0d1117;
+  --fe-bg-hover:       rgba(88, 166, 255, 0.08);
+  --fe-bg-active:      rgba(88, 166, 255, 0.14);
+  --fe-bg-input:       #21262d;
+
+  // Borders
+  --fe-border:         #30363d;
+  --fe-border-strong:  #484f58;
+
+  // Text
+  --fe-text-primary:   #e6edf3;
+  --fe-text-secondary: #8b949e;
+  --fe-text-muted:     #6e7681;
+  --fe-text-inverse:   #0d1117;
+
+  // Brand
+  --fe-accent:         #58a6ff;
+  --fe-accent-light:   rgba(88, 166, 255, 0.14);
+  --fe-accent-hover:   #79b8ff;
+
+  // Status (slightly muted for dark)
+  --fe-green:          #3fb950;
+  --fe-green-light:    rgba(63, 185, 80, 0.12);
+  --fe-yellow:         #d29922;
+  --fe-yellow-light:   rgba(210, 153, 34, 0.12);
+  --fe-blue:           #58a6ff;
+  --fe-blue-light:     rgba(88, 166, 255, 0.12);
+  --fe-purple:         #bc8cff;
+  --fe-purple-light:   rgba(188, 140, 255, 0.12);
+  --fe-red:            #f85149;
+  --fe-red-light:      rgba(248, 81, 73, 0.10);
+
+  // Shadows (stronger for dark)
+  --fe-shadow-xs:      0 1px 2px rgba(0, 0, 0, 0.25);
+  --fe-shadow-sm:      0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --fe-shadow-md:      0 4px 6px -1px rgba(0, 0, 0, 0.40), 0 2px 4px -2px rgba(0, 0, 0, 0.30);
+  --fe-shadow-lg:      0 10px 15px -3px rgba(0, 0, 0, 0.50), 0 4px 6px -4px rgba(0, 0, 0, 0.35);
+  --fe-shadow-xl:      0 20px 25px -5px rgba(0, 0, 0, 0.60), 0 8px 10px -6px rgba(0, 0, 0, 0.40);
+  --fe-shadow-inset:   inset 0 2px 4px rgba(0, 0, 0, 0.30);
+  --fe-shadow-left:    -6px 0 14px -6px rgba(0, 0, 0, 0.55);
+
+  // Canvas grid (dark)
+  --fe-grid-dot:       #1c2128;
+}
+
+// ── Dark-only component overrides ─────────────────────────────────
+// (Only needed for properties NOT driven by CSS variables)
+
+// Canvas background override — the HTML canvas element itself
+.o_flow_canvas_wrapper {
+  background: var(--fe-bg-canvas) !important;
+}
+
+// Sidebar list items
+.o_flow_ide_container .list-group-item {
+  background-color: transparent !important;
+  color: var(--fe-text-primary) !important;
+  border-color: var(--fe-border) !important;
+}
+
+.o_flow_ide_container .list-group-item-action:hover {
+  background-color: var(--fe-bg-hover) !important;
+}
+
+// Dropdown menus
+.o_flow_ide_container .dropdown-menu {
+  background-color: var(--fe-bg-surface) !important;
+  border-color: var(--fe-border) !important;
+  box-shadow: var(--fe-shadow-lg) !important;
+}
+
+.o_flow_ide_container .dropdown-item {
+  color: var(--fe-text-primary) !important;
+  &:hover { background-color: var(--fe-bg-hover) !important; }
+  &.text-danger { color: var(--fe-red) !important; }
+}
+
+// Buttons
+.o_flow_ide_container .btn-outline-secondary {
+  color: var(--fe-text-secondary) !important;
+  border-color: var(--fe-border) !important;
+  &:hover { background-color: var(--fe-bg-hover) !important; }
+}
+
+.o_flow_ide_container .btn-light {
+  background-color: var(--fe-bg-input) !important;
+  border-color: var(--fe-border) !important;
+  color: var(--fe-text-primary) !important;
+}
+
+// Exit dialog box (card inside overlay)
+.o_flow_exit_dialog > div {
+  background-color: var(--fe-bg-surface) !important;
+  border: 1px solid var(--fe-border) !important;
+  color: var(--fe-text-primary) !important;
+}
+
+// Badge (sidebar number pill)
+.o_flow_ide_container .badge.bg-primary {
+  background-color: var(--fe-accent) !important;
+  color: var(--fe-text-inverse) !important;
+}
+
+// Floating text formatter inside canvas
+.floating-formatter {
+  background: var(--fe-bg-surface) !important;
+  border-color: var(--fe-border) !important;
+}
+
+// Vr dividers
+.o_flow_ide_container .vr,
+.o_flow_bottom_toolbar [style*="border-right"] {
+  border-color: var(--fe-border) !important;
+  opacity: 0.6;
+}
+
+// Active sidebar item left border
+.o_flow_diagram_item.active {
+  border-left-color: var(--fe-accent) !important;
+}
+
+// ── Generic Bootstrap light-theme utility classes ──────────────────
+// The header, footer, sidebar header, toolbar and various panels use
+// plain Bootstrap bg-white/bg-light/text-dark instead of the CSS vars
+// above, so dark mode left them a bright white/light-gray island inside
+// an otherwise dark IDE (user report 2026-09-09). Scoped to the IDE
+// container so the color-white SWATCH (a real white color option, not
+// chrome) below is deliberately left untouched.
+// Deliberately does NOT touch plain .border / .border-top / etc. -
+// several buttons here dynamically swap in .border-primary for an
+// active/selected state (e.g. the Bold/Italic/Align buttons), and a
+// blanket border-color override would win over that and flatten the
+// active state back to gray.
+.o_flow_ide_container {
+  .bg-white  { background-color: var(--fe-bg-surface) !important; }
+  .bg-light  { background-color: var(--fe-bg-input) !important; }
+  .text-dark { color: var(--fe-text-primary) !important; }
+  .border-bottom { border-bottom-color: var(--fe-border) !important; }
+  .border-top { border-top-color: var(--fe-border) !important; }
+}
+
+// The bottom toolbar's translucent white background is an inline style,
+// not a class, so it needs its own selector to win over it.
+.o_flow_bottom_toolbar {
+  background: rgba(22, 27, 34, 0.94) !important;
+}
+
+// Colour swatches — keep bright even in dark mode
+.color-dark { background: #334155; }
+.color-white { background: #e6edf3; }
