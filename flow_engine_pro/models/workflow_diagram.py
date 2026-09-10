@@ -219,17 +219,17 @@ class WorkflowDiagram(models.Model):
                 'node_type': n_data.get('type', 'process'),
             }
             if uuid in existing_nodes:
-                existing_nodes[uuid].write(vals)
+                existing_nodes[uuid].sudo().write(vals)
             else:
                 vals.update({'node_uuid': uuid, 'diagram_id': self.id})
                 node_create_vals.append(vals)
         if node_create_vals:
-            self.env['workflow.node'].create(node_create_vals)
+            self.env['workflow.node'].sudo().create(node_create_vals)
 
         # Unlink removed nodes
         nodes_to_unlink = self.node_ids.filtered(lambda n: n.node_uuid not in current_node_uuids)
         if nodes_to_unlink:
-            nodes_to_unlink.unlink()
+            nodes_to_unlink.sudo().unlink()
 
         # 2. Sync Edges (same batching as nodes above)
         # Refresh nodes to get accurate mapping for source/target
@@ -252,14 +252,14 @@ class WorkflowDiagram(models.Model):
             }
 
             if uuid in existing_edges:
-                existing_edges[uuid].write(vals)
+                existing_edges[uuid].sudo().write(vals)
             else:
                 vals.update({'edge_uuid': uuid, 'diagram_id': self.id})
                 edge_create_vals.append(vals)
         if edge_create_vals:
-            self.env['workflow.edge'].create(edge_create_vals)
+            self.env['workflow.edge'].sudo().create(edge_create_vals)
 
         # Unlink removed edges
         edges_to_unlink = self.edge_ids.filtered(lambda e: e.edge_uuid not in current_edge_uuids)
         if edges_to_unlink:
-            edges_to_unlink.unlink()
+            edges_to_unlink.sudo().unlink()

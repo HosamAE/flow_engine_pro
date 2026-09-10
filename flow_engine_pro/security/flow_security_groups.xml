@@ -21,16 +21,26 @@
             <field name="sequence">50</field>
         </record>
 
-        <!-- User: can open the IDE, create/edit diagrams and their own
-             content, but not delete them - deletion is a Manager action. -->
+        <!-- User: middle tier. Can open the IDE and view/edit the
+             content of diagrams that already exist (rename, redraw,
+             reshape, restyle) but cannot create a new diagram record or
+             delete one - those are Manager-only actions.
+             Update 2026-09-10 (user request): tightened from
+             "create/edit" to "view/edit only, no create, no delete" per
+             ir.model.access.csv (perm_create=0, perm_unlink=0 on
+             workflow.diagram/node/edge for this group). The node/edge
+             records that shadow a diagram's canvas_data JSON are kept in
+             sync via _sync_canvas_data(), which now runs as sudo() so a
+             User editing an existing diagram's shapes doesn't hit an
+             AccessError from that internal create/write/unlink. -->
         <record id="group_flow_user" model="res.groups">
             <field name="name">User</field>
             <field name="privilege_id" ref="privilege_flow_engine"/>
-            <field name="comment">Can open Flow Engine Pro and create/edit diagrams.</field>
+            <field name="comment">Can open Flow Engine Pro and view/edit existing diagrams (rename, redraw, restyle). Cannot create new diagrams or delete any.</field>
         </record>
 
-        <!-- Manager: everything a User can do, plus delete diagrams.
-             Implies User, so assigning Manager alone is enough.
+        <!-- Manager: full control. Implies User, plus create and delete
+             on diagrams - the two actions withheld from User.
              Correction 2026-09-10: this does NOT unlock the global
              Settings page - that action's res_model is
              res.config.settings, which every Odoo install restricts to
@@ -43,13 +53,13 @@
             <field name="name">Manager</field>
             <field name="privilege_id" ref="privilege_flow_engine"/>
             <field name="implied_ids" eval="[(4, ref('group_flow_user'))]"/>
-            <field name="comment">Can delete diagrams.</field>
+            <field name="comment">Full access: everything a User can do, plus create new diagrams and delete any diagram.</field>
         </record>
 
         <!-- Every System Administrator automatically becomes a Flow
-             Engine Manager too (can delete diagrams, in addition to the
-             Settings access base.group_system already carries on its
-             own). Regular employees need one of the two groups above
+             Engine Manager too (full create/delete access, in addition
+             to the Settings access base.group_system already carries on
+             its own). Regular employees need one of the two groups above
              explicitly assigned to them. -->
         <record id="base.group_system" model="res.groups">
             <field name="implied_ids" eval="[(4, ref('group_flow_manager'))]"/>

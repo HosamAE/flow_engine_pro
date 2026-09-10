@@ -51,8 +51,9 @@ database, no other Highnox or third-party module required.
   filters, and group-by across diagrams, with a "Canvas" button per row to
   jump straight into the editor.
 - **Dedicated security groups** under their own "Flow Engine Pro" category:
-  *User* (create/edit diagrams) and *Manager* (also delete diagrams). Access
-  is opt-in per user, not granted to every internal employee by default.
+  *User* (view/edit existing diagrams) and *Manager* (also create and delete
+  diagrams). Access is opt-in per user, not granted to every internal
+  employee by default.
 - Demo data (`demo/demo.xml`) ships three realistic, fully-compliant sample
   diagrams — an onboarding approval flow, an IT ticket triage flow, and an
   expense reimbursement flow — each with a comment note, so a fresh install
@@ -66,6 +67,80 @@ per-diagram appearance overrides and a generated `thumbnail`.
 kept in sync on every create/write, scoped to their diagram with
 `ondelete='cascade'`. `res.config.settings` carries the global appearance
 defaults, each backed by an `ir.config_parameter`.
+
+## Creating a diagram programmatically (`canvas_data` JSON schema)
+
+A diagram's entire visual content lives in one field —
+`workflow.diagram.canvas_data` — a JSON string shaped as:
+
+```json
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "x": 100, "y": 100, "width": 120, "height": 50,
+      "type": "start_end",
+      "label": "Start",
+      "color": "#93c5fd",
+      "textColor": "#1e293b",
+      "fontSize": "14"
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "n1", "target": "n2", "label": "" }
+  ]
+}
+```
+
+To create a diagram from code (e.g. an import script, another module,
+`odoo-bin shell`), it's enough to `create()` a `workflow.diagram` with a
+valid `canvas_data` string — everything else follows automatically:
+
+```python
+env['workflow.diagram'].create({
+    'name': 'Onboarding Flow',
+    'canvas_data': json.dumps({
+        'nodes': [
+            {'id': 'n1', 'x': 0, 'y': 0, 'width': 120, 'height': 50, 'type': 'start_end', 'label': 'Start'},
+            {'id': 'n2', 'x': 0, 'y': 150, 'width': 120, 'height': 50, 'type': 'process', 'label': 'Do Work'},
+        ],
+        'edges': [
+            {'id': 'e1', 'source': 'n1', 'target': 'n2'},
+        ],
+    }),
+})
+```
+
+**Node fields** — `id` (any unique string within the diagram), `x`/`y`
+(top-left corner, canvas units), `width`/`height`, `type`, `label`. `type`
+must be one of the values in `workflow.node`'s `node_type` Selection
+(`models/workflow_node.py`):
+
+- `start_end` (oval), `process` (rectangle), `decision` (diamond), `data`
+  (parallelogram) — the four standard flowchart shapes.
+- `comment`, `triangle`, `pentagon`, `hexagon`, `star`, `trapezoid` — free
+  annotation shapes (the long-press shape picker's "Comment" category).
+- `text` — a free-floating text label with no background/border.
+
+Optional visual fields the canvas frontend reads but the backend doesn't
+validate: `color` (hex fill), `textColor` (hex, auto-derived from `color`
+by contrast if omitted), `fontSize`, `isCommentCategory` (true for
+annotation shapes so they're excluded from the flowchart compliance
+checker), `bgImage` (data URL, per-node background image).
+
+**Edge fields** — `id`, `source`/`target` (must match a node `id` in the
+same `nodes` array), `label` (optional, shown on the connector).
+
+`id` values only need to be unique *within* a single diagram's own JSON —
+they're not global. Only `id`, `type`, `label` (nodes) and `id`, `source`,
+`target`, `label` (edges) are read by the backend sync; everything else is
+purely cosmetic and safe to omit (the canvas falls back to sane defaults on
+next open, sourced from Settings > Flow Engine Pro).
+
+`workflow.node` / `workflow.edge` are regenerated from this JSON on every
+`create()`/`write()` of the parent `workflow.diagram` (see **Data model**
+below) — never write to `workflow.node`/`workflow.edge` directly, they'll
+just be overwritten on the next save.
 
 ## Frontend architecture
 
@@ -83,18 +158,39 @@ compliance checker, also a pure function.
 Two groups under the "Flow Engine Pro" category (Settings > Users &
 Companies > Groups): *User* and *Manager* (Manager implies User). Neither
 is granted automatically — an admin assigns one to whichever employees need
-access. The module's own Settings page (global appearance defaults) stays
-gated on `base.group_system` regardless of these groups, since its action
-targets `res.config.settings`, a model Odoo core restricts to System
-Administrators across every installed module, not something this module
-can safely loosen just for itself.
+access.
+
+| Action | User | Manager |
+|---|---|---|
+| Open the app, view diagrams | Yes | Yes |
+| Edit an existing diagram (draw/move/delete shapes, rename, restyle, set a background image) | Yes | Yes |
+| Create a new diagram | No | Yes |
+| Duplicate a diagram (creates a new record) | No | Yes |
+| Delete a diagram | No | Yes |
+
+Editing an existing diagram legitimately adds and removes rows in
+`workflow.node` / `workflow.edge` behind the scenes (see **Data model**
+below) even though a User has no direct create/unlink access to those two
+models — `_sync_canvas_data()` performs that internal sync as `sudo()`
+specifically so a User's own edits aren't blocked by it. A User's direct
+ACL on `workflow.diagram`/`workflow.node`/`workflow.edge` is read+write
+only (`perm_create=0`, `perm_unlink=0`); a Manager has full read/write/
+create/unlink on all three.
+
+The module's own Settings page (global appearance defaults) stays gated on
+`base.group_system` regardless of these groups, since its action targets
+`res.config.settings`, a model Odoo core restricts to System Administrators
+across every installed module, not something this module can safely loosen
+just for itself.
 
 ## Tests
 
-`tests/test_workflow_diagram.py` — node/edge sync on create and update,
-cross-diagram search, settings defaults/overrides, and the security groups
-(a User blocked from delete, a Manager allowed, a user with neither group
-blocked entirely). Run with:
+`tests/test_workflow_diagram.py` — node/edge sync on create and update
+(including the `text` annotation shape), cross-diagram search, settings
+defaults/overrides, and the security groups (a User can edit an existing
+diagram's shapes but is blocked from creating or deleting a diagram; a
+Manager can do both; a user with neither group is blocked entirely). Run
+with:
 
     odoo-bin -c <conf> -d <db> -u flow_engine_pro --test-enable \
              --test-tags /flow_engine_pro --stop-after-init

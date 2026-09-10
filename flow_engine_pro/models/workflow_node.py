@@ -27,4 +27,10 @@ class WorkflowNode(models.Model):
         ('hexagon', 'Hexagon (Comment)'),
         ('star', 'Star (Comment)'),
         ('trapezoid', 'Trapezoid (Comment)'),
+        # The free-floating Text annotation tool (canvas.js draw_text mode)
+        # sends type: 'text' - missing here meant saving ANY diagram
+        # containing one raised ValueError and rolled back the whole
+        # write(), silently losing the entire save (found 2026-09-10 while
+        # documenting the canvas_data JSON schema).
+        ('text', 'Text Label'),
     ], string='Shape Type', default='process')
