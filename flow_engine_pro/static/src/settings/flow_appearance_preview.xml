@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="flow_engine_pro.FlowAppearancePreview">
+    <div class="d-flex gap-3 align-items-start flex-wrap">
+        <div class="text-center">
+            <canvas t-ref="flowPreview" width="120" height="80" class="border rounded bg-white"/>
+            <div class="xx-small text-muted mt-1">Flow shape</div>
+        </div>
+        <div class="text-center">
+            <canvas t-ref="commentPreview" width="120" height="80" class="border rounded bg-white"/>
+            <div class="xx-small text-muted mt-1">Comment shape</div>
+        </div>
+    </div>
+</t>
+
+</templates>

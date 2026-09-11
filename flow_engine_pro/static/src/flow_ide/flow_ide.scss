@@ -1,0 +1,352 @@
+// ════════════════════════════════════════════════════════════════
+//  FLOW ENGINE PRO — Design System (Light Mode)
+//  All colours use CSS variables for dark mode compatibility.
+// ════════════════════════════════════════════════════════════════
+
+// ── Design Tokens ────────────────────────────────────────────────
+:root {
+  // Surfaces
+  --fe-bg-page:        #f1f5f9;
+  --fe-bg-surface:     #ffffff;
+  --fe-bg-sidebar:     #ffffff;
+  --fe-bg-header:      #ffffff;
+  --fe-bg-inspector:   #ffffff;
+  --fe-bg-toolbar:     rgba(255, 255, 255, 0.96);
+  --fe-bg-canvas:      #f8fafc;
+  --fe-bg-hover:       rgba(13, 110, 253, 0.06);
+  --fe-bg-active:      rgba(13, 110, 253, 0.10);
+  --fe-bg-input:       #f8f9fa;
+
+  // Borders
+  --fe-border:         #e2e8f0;
+  --fe-border-strong:  #cbd5e1;
+
+  // Text
+  --fe-text-primary:   #0f172a;
+  --fe-text-secondary: #475569;
+  --fe-text-muted:     #94a3b8;
+  --fe-text-inverse:   #ffffff;
+
+  // Brand
+  --fe-accent:         #0d6efd;
+  --fe-accent-light:   rgba(13, 110, 253, 0.10);
+  --fe-accent-hover:   #0b5ed7;
+
+  // Status colours (canvas shapes)
+  --fe-green:          #22c55e;
+  --fe-green-light:    rgba(34, 197, 94, 0.14);
+  --fe-yellow:         #eab308;
+  --fe-yellow-light:   rgba(234, 179, 8, 0.14);
+  --fe-blue:           #3b82f6;
+  --fe-blue-light:     rgba(59, 130, 246, 0.12);
+  --fe-purple:         #8b5cf6;
+  --fe-purple-light:   rgba(139, 92, 246, 0.12);
+  --fe-red:            #ef4444;
+  --fe-red-light:      rgba(239, 68, 68, 0.10);
+
+  // Shadows
+  --fe-shadow-xs:      0 1px 2px rgba(0, 0, 0, 0.05);
+  --fe-shadow-sm:      0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --fe-shadow-md:      0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --fe-shadow-lg:      0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --fe-shadow-xl:      0 20px 25px -5px rgba(0, 0, 0, 0.09), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --fe-shadow-inset:   inset 0 2px 4px rgba(0, 0, 0, 0.04);
+  --fe-shadow-left:    -6px 0 12px -6px rgba(0, 0, 0, 0.10);
+
+  // Canvas grid dot
+  --fe-grid-dot:       #d1d9e0;
+
+  // Transitions
+  --fe-ease:           cubic-bezier(0.4, 0, 0.2, 1);
+  --fe-duration:       0.18s;
+}
+
+
+// ── Base Container ────────────────────────────────────────────────
+.o_flow_ide_container {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  height: calc(100vh - 46px);
+  background-color: var(--fe-bg-page);
+  color: var(--fe-text-primary);
+  display: flex;
+  overflow: hidden;
+}
+
+
+// ── Header Bar ────────────────────────────────────────────────────
+.o_flow_header {
+  background-color: var(--fe-bg-header) !important;
+  border-bottom: 1px solid var(--fe-border) !important;
+  box-shadow: var(--fe-shadow-xs);
+}
+
+
+// ── Left Sidebar ──────────────────────────────────────────────────
+.o_flow_sidebar {
+  background-color: var(--fe-bg-sidebar) !important;
+  border-right: 1px solid var(--fe-border) !important;
+  z-index: 20;
+  transition: width var(--fe-duration) var(--fe-ease);
+  position: relative;
+  overflow-x: hidden !important;
+  box-shadow: var(--fe-shadow-xs);
+
+  &.collapsed { width: 60px; }
+  &.expanded  { width: 280px; }
+}
+
+.o_flow_diagram_item {
+  transition: background-color var(--fe-duration) var(--fe-ease);
+  border-left: 3px solid transparent;
+  color: var(--fe-text-primary) !important;
+
+  &:hover {
+    background-color: var(--fe-bg-hover) !important;
+  }
+  &.active,
+  &.bg-primary-light {
+    background-color: var(--fe-bg-active) !important;
+    border-left-color: var(--fe-accent) !important;
+  }
+}
+
+.diagram-handle-wrapper .badge {
+  transition: transform var(--fe-duration) ease, box-shadow var(--fe-duration) ease;
+  cursor: move;
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: var(--fe-shadow-md) !important;
+  }
+}
+
+
+// ── Canvas Workspace ──────────────────────────────────────────────
+.workshop-container {
+  background-color: var(--fe-bg-canvas);
+  background-image: radial-gradient(var(--fe-grid-dot) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.canvas-viewport canvas {
+  display: block;
+}
+
+
+// ── Bottom Toolbar ────────────────────────────────────────────────
+.o_flow_bottom_toolbar {
+  background: var(--fe-bg-toolbar) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--fe-border) !important;
+  box-shadow: var(--fe-shadow-xl) !important;
+  user-select: none;
+}
+
+.flow-tool-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 7px;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--fe-text-secondary);
+  min-width: 34px;
+  transition:
+    background-color var(--fe-duration) ease,
+    color var(--fe-duration) ease,
+    transform 0.1s ease;
+
+  i    { font-size: 13px; line-height: 1; }
+  span { font-size: 8px; font-weight: 600; letter-spacing: 0.2px; white-space: nowrap; }
+
+  &:hover {
+    background-color: var(--fe-bg-hover);
+    color: var(--fe-accent);
+    transform: translateY(-1px);
+  }
+
+  &--active {
+    background-color: var(--fe-bg-active) !important;
+    color: var(--fe-accent) !important;
+  }
+
+  &--danger {
+    color: var(--fe-red) !important;
+    &:hover { background-color: var(--fe-red-light) !important; color: var(--fe-red) !important; }
+  }
+
+  &--disabled { opacity: 0.3; pointer-events: none; }
+
+  &--shape {
+    color: var(--fe-text-secondary);
+    &:hover { background-color: rgba(0,0,0,0.04); transform: translateY(-1px); }
+  }
+  &--shape-active { font-weight: 700; transform: translateY(-1px); }
+}
+
+// Shape mini-icons
+.flow-shape-icon { border: 2px solid; flex-shrink: 0; }
+.flow-shape-oval   { width: 22px; height: 13px; border-radius: 999px; }
+.flow-shape-diamond{ width: 12px; height: 12px; transform: rotate(45deg); margin: 2px 0; }
+.flow-shape-rect   { width: 20px; height: 13px; border-radius: 2px; }
+.flow-shape-para   { width: 18px; height: 12px; transform: skewX(-18deg); }
+
+// Comment-only shape mini-icons (clip-path, no border - these are solid
+// silhouettes since the Comment shape library isn't styled with the
+// colored-border-per-type convention the 4 Flow shapes use)
+.flow-shape-triangle  { width: 18px; height: 15px; border: none !important; clip-path: polygon(50% 0%, 100% 100%, 0% 100%); }
+.flow-shape-pentagon  { width: 16px; height: 15px; border: none !important; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }
+.flow-shape-hexagon   { width: 18px; height: 14px; border: none !important; clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); }
+.flow-shape-star      { width: 18px; height: 17px; border: none !important; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+.flow-shape-trapezoid { width: 20px; height: 13px; border: none !important; clip-path: polygon(22% 0%, 78% 0%, 100% 100%, 0% 100%); }
+
+
+// ── Footer Info Bar ───────────────────────────────────────────────
+.o_flow_footer {
+  background-color: var(--fe-bg-surface) !important;
+  border-top: 1px solid var(--fe-border) !important;
+  color: var(--fe-text-muted);
+  font-size: 11px;
+  // The Navigator minimap is position-fixed to the viewport's bottom-right
+  // corner (300px wide) and sits at a higher z-index than this bar, so
+  // without this the zoom -/%/+ controls on the footer's right edge render
+  // directly underneath it - clickable in the DOM but visually hidden and
+  // literally unreachable by mouse (the navigator's canvas intercepts the
+  // click first).
+  // !important: otherwise Bootstrap's px-3 utility class on the same
+  // element (equal specificity, loaded later) wins and this is silently
+  // ignored.
+  padding-right: 310px !important;
+}
+
+
+// ── Right Inspector ───────────────────────────────────────────────
+.o_flow_right_inspector {
+  width: 300px;
+  // Measured live: .o_flow_header renders ~44.5px tall starting at y=46
+  // (bottom edge ~91px) - the old top:48px value was stale and left this
+  // panel overlapping/hiding the header's Save/Settings/Close buttons
+  // whenever it was open (found 2026-09-09 while adding the Settings
+  // panel, but it silently affected the Properties inspector too).
+  top: 92px;
+  bottom: 200px;
+  right: 0;
+  background-color: var(--fe-bg-inspector) !important;
+  border-left: 1px solid var(--fe-border) !important;
+  box-shadow: var(--fe-shadow-left);
+  z-index: 90;
+  height: calc(100vh - 92px - 200px);
+}
+
+
+// ── Minimap / Navigator ───────────────────────────────────────────
+// Same width as .o_flow_right_inspector (300px) and the same left
+// border/shadow treatment, so the two right-docked panels read as one
+// consistent column. Height is slightly less than .o_flow_right_inspector's
+// reserved `bottom: 200px` (12px less) so a small visual gap separates
+// the two panels instead of them touching edge-to-edge - the bottom
+// toolbar (see its `right: 300px` in flow_ide.xml) is bounded to the
+// same 300px so it can never overlap this column either.
+.o_flow_fixed_navigator {
+  width: 300px;
+  height: 188px;
+  background-color: var(--fe-bg-surface) !important;
+  border-left: 1px solid var(--fe-border) !important;
+  box-shadow: var(--fe-shadow-left);
+  z-index: 100;
+  bottom: 0;
+  right: 0;
+}
+
+.navigator-canvas-wrapper {
+  height: calc(100% - 35px);
+}
+
+
+// ── Inspector Colour Swatches ─────────────────────────────────────
+.swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  &:hover    { transform: scale(1.25); }
+  &.ring     { outline: 2px solid var(--fe-accent); outline-offset: 2px; }
+}
+
+.color-blue   { background: #bae1ff; }
+.color-orange { background: #ffdfba; }
+.color-green  { background: #a8e6cf; }
+.color-red    { background: #ffb7b2; }
+.color-purple { background: #e0bbe4; }
+.color-yellow { background: #ffffba; }
+.color-teal   { background: #95e1d3; }
+.color-pink   { background: #ffc8dd; }
+.color-dark   { background: #1e293b; }
+.color-white  { background: #ffffff; border: 1px solid var(--fe-border); }
+.color-black  { background: #000000; }
+
+
+// ── Utility Helpers ───────────────────────────────────────────────
+.bg-primary-light  { background-color: var(--fe-accent-light); }
+.bg-success-light  { background-color: var(--fe-green-light); }
+.bg-warning-light  { background-color: var(--fe-yellow-light); }
+.bg-purple-light   { background-color: var(--fe-purple-light); }
+.border-purple     { border-color: var(--fe-purple) !important; }
+
+.x-small  { font-size: 11px; }
+.xx-small { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; opacity: 0.7; }
+
+.custom-scrollbar::-webkit-scrollbar       { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--fe-border); border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+
+.shadow-inner { box-shadow: var(--fe-shadow-inset); }
+.transition-all { transition: all var(--fe-duration) var(--fe-ease); }
+
+
+// ── Animations ────────────────────────────────────────────────────
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-left  { animation: slideInRight 0.25s var(--fe-ease) both; }
+
+
+// ── Exit Dialog Overlay ───────────────────────────────────────────
+.o_flow_exit_dialog {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 10000;
+}
+
+
+// ── Form controls inside IDE ──────────────────────────────────────
+.o_flow_ide_container {
+  .form-control, .form-select {
+    background-color: var(--fe-bg-input);
+    border-color: var(--fe-border);
+    color: var(--fe-text-primary);
+    &:focus {
+      border-color: var(--fe-accent);
+      box-shadow: 0 0 0 3px var(--fe-accent-light);
+    }
+  }
+  .bg-light  { background-color: var(--fe-bg-input) !important; }
+  .bg-white  { background-color: var(--fe-bg-surface) !important; }
+  .text-dark { color: var(--fe-text-primary) !important; }
+  .text-muted{ color: var(--fe-text-muted) !important; }
+  .border    { border-color: var(--fe-border) !important; }
+  .border-top    { border-top-color: var(--fe-border) !important; }
+  .border-bottom { border-bottom-color: var(--fe-border) !important; }
+  .border-start  { border-left-color: var(--fe-border) !important; }
+  .border-end    { border-right-color: var(--fe-border) !important; }
+}

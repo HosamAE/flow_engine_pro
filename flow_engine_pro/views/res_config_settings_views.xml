@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.flow.engine.pro</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Flow Engine Pro" string="Flow Engine Pro" name="flow_engine_pro" groups="base.group_system">
+                    <block title="Live Preview" name="flow_preview">
+                        <setting string="What this looks like" help="Updates live as you change any setting below - save isn't needed to see it." id="flow_preview_setting">
+                            <field name="flow_preview_placeholder" widget="flow_appearance_preview" nolabel="1"/>
+                        </setting>
+                    </block>
+                    <block title="Defaults" name="flow_defaults">
+                        <setting string="Default Flow Shape" help="Shape used where a new Flow step has no more specific shape chosen" id="flow_default_shape_setting">
+                            <field name="flow_default_shape"/>
+                        </setting>
+                        <setting string="Default Comment Shape" help="Shape used when a new Comment is created" id="flow_default_comment_shape_setting">
+                            <field name="flow_default_comment_shape"/>
+                        </setting>
+                        <setting string="Default Shape Size" help="Width / height a new Flow shape starts at" id="flow_default_shape_size_setting">
+                            <field name="flow_default_shape_width" class="oe_inline" style="width: 70px"/> x
+                            <field name="flow_default_shape_height" class="oe_inline" style="width: 70px"/> px
+                        </setting>
+                        <setting string="Long-Press Duration" help="How long to hold before the shape picker opens (ms)" id="flow_longpress_duration_setting">
+                            <field name="flow_longpress_duration_ms" class="oe_inline" style="width: 90px"/>
+                        </setting>
+                    </block>
+                    <block title="Flow Shape Typography" name="flow_typography">
+                        <setting string="Font Size" id="flow_default_font_size_setting">
+                            <field name="flow_default_font_size" class="oe_inline" style="width: 70px"/>
+                        </setting>
+                        <setting string="Font" id="flow_font_family_setting">
+                            <field name="flow_font_family"/>
+                        </setting>
+                    </block>
+                    <block title="Comment Shape Typography" name="comment_typography">
+                        <setting string="Font Size" id="comment_font_size_setting">
+                            <field name="comment_font_size" class="oe_inline" style="width: 70px"/>
+                        </setting>
+                        <setting string="Font" id="comment_font_family_setting">
+                            <field name="comment_font_family"/>
+                        </setting>
+                        <setting string="Text Color" help="Leave blank to follow the light/dark theme automatically" id="comment_font_color_setting">
+                            <field name="comment_font_color" widget="color" class="oe_inline"/>
+                        </setting>
+                    </block>
+                    <block title="Connector Lines" name="flow_lines">
+                        <setting string="Line Color" help="Leave blank to follow the light/dark theme automatically" id="flow_line_color_setting">
+                            <field name="flow_line_color" widget="color" class="oe_inline"/>
+                        </setting>
+                        <setting string="Line Thickness" help="Stroke width (px) of a Flow connector; a selected line draws about 1px thicker than this" id="flow_line_width_setting">
+                            <field name="flow_line_width" class="oe_inline" style="width: 70px"/>
+                        </setting>
+                        <setting string="Arrow Head Style" id="flow_arrow_style_setting">
+                            <field name="flow_arrow_style"/>
+                        </setting>
+                    </block>
+                    <block title="Flow Shape Border" name="flow_border">
+                        <setting string="Enabled" id="flow_border_enabled_setting">
+                            <field name="flow_border_enabled"/>
+                        </setting>
+                        <setting string="Style" id="flow_border_style_setting">
+                            <field name="flow_border_style" invisible="not flow_border_enabled"/>
+                        </setting>
+                        <setting string="Color" help="Leave blank to keep each shape's own outline colour" id="flow_border_color_setting">
+                            <field name="flow_border_color" widget="color" class="oe_inline" invisible="not flow_border_enabled"/>
+                        </setting>
+                        <setting string="Width" id="flow_border_width_setting">
+                            <field name="flow_border_width" class="oe_inline" style="width: 70px" invisible="not flow_border_enabled"/>
+                        </setting>
+                    </block>
+                    <block title="Comment Shape Border" name="comment_border">
+                        <setting string="Enabled" id="comment_border_enabled_setting">
+                            <field name="comment_border_enabled"/>
+                        </setting>
+                        <setting string="Style" id="flow_comment_border_style_setting">
+                            <field name="flow_comment_border_style" invisible="not comment_border_enabled"/>
+                        </setting>
+                        <setting string="Color" help="Leave blank to keep each shape's own outline colour" id="comment_border_color_setting">
+                            <field name="comment_border_color" widget="color" class="oe_inline" invisible="not comment_border_enabled"/>
+                        </setting>
+                        <setting string="Width" id="comment_border_width_setting">
+                            <field name="comment_border_width" class="oe_inline" style="width: 70px" invisible="not comment_border_enabled"/>
+                        </setting>
+                    </block>
+                    <block title="Canvas" name="flow_canvas">
+                        <setting string="Background Style" id="flow_canvas_bg_style_setting">
+                            <field name="flow_canvas_bg_style"/>
+                        </setting>
+                        <setting string="Background Color" help="Leave blank to follow the light/dark theme automatically" id="flow_canvas_bg_color_setting">
+                            <field name="flow_canvas_bg_color" widget="color" class="oe_inline"/>
+                        </setting>
+                    </block>
+                    <block title="Capture" name="flow_capture">
+                        <setting string="Capture Also Downloads Locally" help="The Capture button always saves a snapshot into the diagram's internal storage; toggle this to also trigger a browser download of the PNG." id="flow_capture_local_download_setting">
+                            <field name="flow_capture_local_download"/>
+                        </setting>
+                    </block>
+                    <block title="Search" name="flow_search">
+                        <setting string="Sidebar Search" help="Search a shape's name across every diagram from the sidebar - jumps to and pulses the first match, and shows how many shapes match on each diagram's row." id="flow_enable_sidebar_search_setting">
+                            <field name="flow_enable_sidebar_search"/>
+                        </setting>
+                        <setting string="Diagram Search" help="Search a shape's name within the currently open diagram only, from the canvas header - highlights every match instead of jumping to one." id="flow_enable_header_search_setting">
+                            <field name="flow_enable_header_search"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_flow_engine_settings" model="ir.actions.act_window">
+        <field name="name">Flow Engine Pro Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="context">{'module': 'flow_engine_pro', 'bin_size': False}</field>
+    </record>
+</odoo>

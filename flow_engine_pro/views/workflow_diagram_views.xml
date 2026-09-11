@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Client Action for IDE -->
+        <record id="action_open_flow_ide" model="ir.actions.client">
+            <field name="name">Flow Engine Studio</field>
+            <field name="tag">flow_engine_pro.action_ide</field>
+            <field name="target">main</field>
+        </record>
+
+        <!-- Form View -->
+        <record id="view_workflow_diagram_form" model="ir.ui.view">
+            <field name="name">workflow.diagram.form</field>
+            <field name="model">workflow.diagram</field>
+            <field name="arch" type="xml">
+                <form string="Workflow Diagram">
+                    <header>
+                        <button name="%(action_open_flow_ide)d" type="action" string="Launch Flow IDE" class="oe_highlight text-white" icon="fa-sitemap"/>
+                    </header>
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="active"/>
+                        <field name="thumbnail" widget="image" class="oe_avatar" options="{'size': [180, 120]}"/>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" placeholder="e.g., Construction Approval Flow"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                                <field name="active" invisible="1"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <!-- Technical/raw pages - gated behind Developer Mode so a
+                                 casual visitor arriving here via a fallback link (a
+                                 smart button, a related field elsewhere in Odoo) isn't
+                                 tempted to hand-edit the JSON blob and corrupt the
+                                 diagram; the real editing surface is the Flow IDE
+                                 button above. -->
+                            <page string="Canvas Data (Backend Sync)" groups="base.group_no_one">
+                                <field name="canvas_data" widget="text"/>
+                            </page>
+                            <page string="Display Settings">
+                                <p class="text-muted">Leave any field blank to use the global default from Settings &gt; Flow Engine Pro.</p>
+                                <group>
+                                    <group string="Defaults">
+                                        <field name="override_flow_shape"/>
+                                        <field name="override_comment_shape"/>
+                                        <field name="override_shape_width"/>
+                                        <field name="override_shape_height"/>
+                                        <field name="override_longpress_duration_ms"/>
+                                    </group>
+                                    <group string="Lines &amp; Canvas">
+                                        <field name="override_line_color" widget="color"/>
+                                        <field name="override_line_width"/>
+                                        <field name="override_arrow_style"/>
+                                        <field name="override_canvas_bg_style"/>
+                                        <field name="override_canvas_bg_color" widget="color"/>
+                                    </group>
+                                </group>
+                                <group>
+                                    <group string="Flow Shape Typography">
+                                        <field name="override_font_size"/>
+                                        <field name="override_flow_font_family"/>
+                                    </group>
+                                    <group string="Comment Shape Typography">
+                                        <field name="override_comment_font_size"/>
+                                        <field name="override_comment_font_family"/>
+                                        <field name="override_comment_font_color" widget="color"/>
+                                    </group>
+                                </group>
+                                <group>
+                                    <group string="Flow Shape Border">
+                                        <field name="override_flow_border_enabled"/>
+                                        <field name="override_flow_border_style"/>
+                                        <field name="override_flow_border_color" widget="color"/>
+                                        <field name="override_flow_border_width"/>
+                                    </group>
+                                    <group string="Comment Shape Border">
+                                        <field name="override_comment_border_enabled"/>
+                                        <field name="override_comment_border_style"/>
+                                        <field name="override_comment_border_color" widget="color"/>
+                                        <field name="override_comment_border_width"/>
+                                    </group>
+                                </group>
+                            </page>
+                            <page string="Search Index (Nodes/Edges)" groups="base.group_no_one">
+                                <group>
+                                    <field name="node_ids" readonly="1">
+                                        <tree>
+                                            <field name="name"/>
+                                            <field name="node_type"/>
+                                            <field name="node_uuid"/>
+                                        </tree>
+                                    </field>
+                                </group>
+                                <group>
+                                    <field name="edge_ids" readonly="1">
+                                        <tree>
+                                            <field name="name"/>
+                                            <field name="source_node_id"/>
+                                            <field name="target_node_id"/>
+                                            <field name="edge_uuid"/>
+                                        </tree>
+                                    </field>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- list View -->
+        <record id="view_workflow_diagram_list" model="ir.ui.view">
+            <field name="name">workflow.diagram.list</field>
+            <field name="model">workflow.diagram</field>
+            <field name="arch" type="xml">
+                <tree string="Workflow Diagrams">
+                    <field name="thumbnail" widget="image" options="{'size': [40, 28]}"/>
+                    <field name="name"/>
+                    <field name="write_date" string="Last Updated"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                    <button name="%(action_open_flow_ide)d" type="action" string="Canvas" icon="fa-sitemap" class="btn-link"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Search View -->
+        <record id="view_workflow_diagram_search" model="ir.ui.view">
+            <field name="name">workflow.diagram.search</field>
+            <field name="model">workflow.diagram</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <filter string="Archived" name="archived" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <group>
+                        <filter string="Company" name="group_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                        <filter string="Last Updated" name="group_write_date" context="{'group_by': 'write_date:month'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Window Action -->
+        <record id="action_workflow_diagram" model="ir.actions.act_window">
+            <field name="name">Flow Engine Diagrams</field>
+            <field name="res_model">workflow.diagram</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+              <p class="o_view_nocontent_smiling_face">
+                Create a new Flow Diagram Framework!
+              </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_workflow_diagram_user,workflow.diagram.user,model_workflow_diagram,group_flow_user,1,1,0,0
+access_workflow_diagram_manager,workflow.diagram.manager,model_workflow_diagram,group_flow_manager,1,1,1,1
+access_workflow_node_user,workflow.node.user,model_workflow_node,group_flow_user,1,1,0,0
+access_workflow_node_manager,workflow.node.manager,model_workflow_node,group_flow_manager,1,1,1,1
+access_workflow_edge_user,workflow.edge.user,model_workflow_edge,group_flow_user,1,1,0,0
+access_workflow_edge_manager,workflow.edge.manager,model_workflow_edge,group_flow_manager,1,1,1,1
