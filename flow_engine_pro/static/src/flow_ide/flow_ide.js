@@ -789,10 +789,21 @@ export class FlowIDE extends Component {
         if (this._canvasApi) this._canvasApi.fitToContent();
       }, 0);
 
-      // Update URL hash to include the record ID (Native JS way)
+      // Update URL hash to include the record ID (Native JS way).
+      // The unanchored /id=\d+/ this used to use matched the TAIL of
+      // 'menu_id=' or 'cids=' (both legitimately contain the substring
+      // 'id=') whenever no diagram had been opened yet in this hash,
+      // silently corrupting menu_id into the diagram's own id and
+      // hijacking the whole app to an unrelated menu. Odoo 19's
+      // pretty-URL routing (/odoo/...) doesn't populate the hash this
+      // way in normal use, so this stayed dormant here, but it's a real
+      // bug on any hash-based route - found live on the 17.0 port, where
+      // the classic #action=..&cids=..&menu_id=.. hash format exposed it
+      // immediately (backported here for correctness). Now only matches
+      // a standalone id= param (preceded by & or #).
       const currentHash = window.location.hash;
-      if (currentHash.includes('id=')) {
-        window.location.hash = currentHash.replace(/id=\d+/, `id=${diagramId}`);
+      if (/[&#]id=\d+/.test(currentHash)) {
+        window.location.hash = currentHash.replace(/([&#])id=\d+/, `$1id=${diagramId}`);
       } else {
         window.location.hash = currentHash + `&id=${diagramId}`;
       }
