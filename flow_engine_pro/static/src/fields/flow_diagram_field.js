@@ -1,10 +1,8 @@
 /** @odoo-module **/
 
 import { registry } from "@web/core/registry";
-import { Component } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { computeM2OProps, Many2One } from "@web/views/fields/many2one/many2one";
-import { buildM2OFieldDescription, Many2OneField } from "@web/views/fields/many2one/many2one_field";
+import { Many2OneField, many2OneField } from "@web/views/fields/many2one/many2one_field";
 
 // A generic widget for a Many2one field to workflow.diagram, addable to
 // ANY model (e.g. `flow_id = fields.Many2one('workflow.diagram')` +
@@ -13,17 +11,18 @@ import { buildM2OFieldDescription, Many2OneField } from "@web/views/fields/many2
 // searchable/editable) and, once a diagram is set, shows its live
 // thumbnail (see workflow.diagram.save_snapshot()) above it - clicking
 // the thumbnail opens the Flow IDE on that diagram.
-export class FlowDiagramPreviewField extends Component {
+//
+// Odoo 18 port note: unlike Odoo 19, there's no standalone low-level
+// Many2One component to compose around (no computeM2OProps either) -
+// Many2OneField itself is the whole picker. So this extends
+// Many2OneField directly and reuses its own template via t-call, instead
+// of wrapping a separate Many2One component the way the 19.0 branch does.
+export class FlowDiagramPreviewField extends Many2OneField {
   static template = "flow_engine_pro.FlowDiagramPreviewField";
-  static components = { Many2One };
-  static props = { ...Many2OneField.props };
 
   setup() {
+    super.setup();
     this.action = useService("action");
-  }
-
-  get m2oProps() {
-    return computeM2OProps(this.props);
   }
 
   get diagram() {
@@ -46,7 +45,8 @@ export class FlowDiagramPreviewField extends Component {
 }
 
 export const flowDiagramPreviewField = {
-  ...buildM2OFieldDescription(FlowDiagramPreviewField),
+  ...many2OneField,
+  component: FlowDiagramPreviewField,
 };
 
 registry.category("fields").add("flow_diagram_preview", flowDiagramPreviewField);

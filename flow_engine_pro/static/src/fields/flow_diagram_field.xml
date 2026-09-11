@@ -9,7 +9,7 @@
                     <t t-esc="diagram.display_name"/>
                 </div>
             </div>
-            <Many2One t-props="m2oProps"/>
+            <t t-call="web.Many2OneField"/>
         </div>
     </t>
 </templates>

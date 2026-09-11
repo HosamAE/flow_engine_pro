@@ -653,11 +653,17 @@ export class FlowIDE extends Component {
       this.state.sidebarSearchCounts = {};
       return;
     }
-    const result = await this.orm.webReadGroup('workflow.node', [['name', 'ilike', query]], ['diagram_id'], ['__count']);
+    // Odoo 18's orm.webReadGroup signature is (model, domain, fields,
+    // groupby) - fields/groupby swapped from Odoo 19's (model, domain,
+    // groupby, aggregates). Also, the per-group record count comes back
+    // under '<groupby_field>_count' (e.g. diagram_id_count) in 18, not
+    // the uniform '__count' key Odoo 19 introduced. Found while porting
+    // from the 19.0 branch.
+    const result = await this.orm.webReadGroup('workflow.node', [['name', 'ilike', query]], ['__count'], ['diagram_id']);
     const counts = {};
     for (const g of result.groups || []) {
       const diagramId = g.diagram_id && g.diagram_id[0];
-      if (diagramId) counts[diagramId] = g.__count;
+      if (diagramId) counts[diagramId] = g.diagram_id_count;
     }
     this.state.sidebarSearchCounts = counts;
   }
