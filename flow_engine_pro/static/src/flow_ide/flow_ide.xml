@@ -1,0 +1,659 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="flow_engine_pro.FlowIDE" owl="1">
+        <div class="o_flow_ide_container d-flex w-100">
+            
+            <!-- 1. LEFT SIDEBAR -->
+            <div class="o_flow_sidebar border-end d-flex flex-column shadow-sm transition-all"
+                 t-on-mouseenter="onSidebarMouseEnter"
+                 t-on-mouseleave="onSidebarMouseLeave"
+                 t-att-class="{ 'expanded': state.isSidebarExpanded, 'collapsed': !state.isSidebarExpanded }">
+                
+                <div class="p-2 border-bottom bg-white" style="min-height: 60px; position: relative; z-index: 100;">
+                    <t t-if="state.selectedDiagramIds.size === 0">
+                        <div class="d-flex align-items-center justify-content-between h-100 animate__animated animate__fadeIn">
+                            <h6 class="m-0 fw-bold text-dark text-nowrap small ps-1" t-if="state.isSidebarExpanded">Flow Engine</h6>
+                            <div class="d-flex gap-1" t-if="state.isSidebarExpanded">
+                                <button class="btn btn-primary btn-sm p-1 px-2 shadow-sm fw-bold" t-on-click="createNewDiagram" title="New">
+                                    <i class="fa fa-plus"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm p-1 px-2 shadow-sm" t-on-click="importDiagrams" title="Import">
+                                    <i class="fa fa-upload"></i>
+                                </button>
+                                <input type="file" accept="application/json" class="d-none" t-ref="importFileInput" t-on-change="(ev) => this.onImportFileChange(ev)"/>
+                                <!-- One shared hidden input for every diagram row's "Set Background
+                                     Image" menu item (see the sidebar list below) - which diagram
+                                     it applies to is tracked in openDiagramBgImagePicker(), since an
+                                     Owl t-ref can't be parameterized per t-foreach iteration. -->
+                                <input type="file" accept="image/*" class="d-none" t-ref="diagramBgImageInput" t-on-change="(ev) => this.onDiagramBgImageChange(ev)"/>
+                                <button class="btn btn-sm btn-link text-muted p-1" t-on-click="toggleSidebarPin">
+                                    <i t-attf-class="fa fa-thumb-tack {{ state.isSidebarPinned ? 'text-primary' : 'opacity-50' }}"></i>
+                                </button>
+                                <button class="btn btn-sm btn-link text-muted p-1" t-on-click="() => this.openHelp()" title="Help &amp; About">
+                                    <i class="fa fa-info-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="d-flex align-items-center justify-content-between h-100 animate__animated animate__slideInDown">
+                            <div class="d-flex align-items-center overflow-hidden ps-1">
+                                <span class="small fw-bold text-primary text-nowrap"><t t-esc="state.selectedDiagramIds.size"/> Selected</span>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-secondary btn-sm dropdown-toggle fw-bold py-1 px-2 x-small" data-bs-toggle="dropdown">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                    <li><a class="dropdown-item py-1 text-danger x-small" href="#" t-on-click="deleteSelectedDiagrams">
+                                        <i class="fa fa-trash me-2"></i> Delete</a>
+                                    </li>
+                                    <li><a class="dropdown-item py-1 x-small" href="#" t-on-click="exportDiagrams">
+                                        <i class="fa fa-download me-2"></i> Export</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Search & Pulse: finds a shape by name across every diagram,
+                     opens its diagram if needed, and pans + pulses it on the
+                     canvas (finishes the TECHNICAL_SPEC.md item that was never
+                     actually built - user request 2026-09-10). -->
+                <div t-if="state.isSidebarExpanded &amp;&amp; state.searchSettings.enable_sidebar_search" class="p-2 border-bottom bg-white">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-muted"></i></span>
+                        <input type="text" class="form-control border-start-0" placeholder="Search shapes..."
+                               t-model="state.searchQuery"
+                               t-on-input="() => this.onSidebarSearchInput()"
+                               t-on-keydown="(ev) => ev.key === 'Enter' &amp;&amp; this.searchAndPulse()"/>
+                    </div>
+                </div>
+
+                <div class="o_flow_sidebar_list flex-grow-1 overflow-auto p-0 custom-scrollbar">
+                    <div class="list-group list-group-flush">
+                        <t t-foreach="state.diagrams" t-as="diagram" t-key="diagram.id">
+                            <div class="o_flow_diagram_item list-group-item list-group-item-action border-0 py-2 px-2 border-bottom d-flex align-items-center text-dark p-0"
+                                 draggable="true"
+                                 t-on-dragstart="(ev) => this.onDiagramDragStart(ev, diagram.id)"
+                                 t-on-dragover.prevent=""
+                                 t-on-drop="(ev) => this.onDiagramDrop(ev, diagram.id)"
+                                 t-attf-class="{{ state.diagramId === diagram.id ? 'bg-primary-light border-start border-4 border-primary active' : 'hover-bg-light' }}">
+                                
+                                <!-- 1. Non-clickable Controls Area -->
+                                <div class="d-flex align-items-center ps-2 pe-1">
+                                    <!-- Unified Handle and Number Badge - shown even when collapsed, so the
+                                         60px rail reads as a clean numbered icon list instead of leaving the
+                                         name text (below) to get squeezed into 1-2 letters + "..." -->
+                                    <div class="diagram-handle-wrapper d-flex align-items-center justify-content-center me-2 cursor-move"
+                                         title="Drag to reorder"
+                                         t-on-dragstart="(ev) => this.onDiagramDragStart(ev, diagram.id)">
+                                        <div class="badge rounded-pill bg-primary text-white d-flex align-items-center shadow-sm px-2 py-1"
+                                              style="font-size: 10px; gap: 4px; min-width: 32px; transition: all 0.2s;">
+                                            <i class="fa fa-bars opacity-75" style="font-size: 9px;"></i>
+                                            <t t-esc="diagram_index + 1"/>
+                                        </div>
+                                    </div>
+                                    <!-- Checkbox -->
+                                    <div class="me-1" t-if="state.isSidebarExpanded">
+                                        <input type="checkbox" class="form-check-input m-0 cursor-pointer"
+                                               t-att-checked="state.selectedDiagramIds.has(diagram.id)"
+                                               t-on-click.stop="() => this.toggleDiagramSelection(diagram.id)"/>
+                                    </div>
+                                </div>
+
+                                <!-- 2. Clickable Main Content Area (Loads Diagram) - the name itself only
+                                     renders once expanded; collapsed hover already only lasts an instant
+                                     before onSidebarMouseEnter expands it, so there's nothing meaningful to
+                                     read at 60px width anyway. -->
+                                <div class="flex-grow-1 overflow-hidden py-2 cursor-pointer" t-on-click="() => this.loadDiagram(diagram.id)" t-if="state.isSidebarExpanded">
+                                    <div class="sidebar-content-fade">
+                                        <t t-if="state.editingDiagramId === diagram.id">
+                                            <input type="text" class="form-control form-control-sm"
+                                                   t-model="state.editingDiagramName"
+                                                   t-on-blur="() => this.saveDiagramName(diagram.id)"
+                                                   t-on-keydown="(ev) => ev.key === 'Enter' &amp;&amp; this.saveDiagramName(diagram.id)"/>
+                                        </t>
+                                        <t t-else="">
+                                            <div class="text-truncate small fw-bold d-flex align-items-center gap-1">
+                                                <span class="text-truncate"><t t-esc="diagram.name"/></span>
+                                                <!-- Live match count for the sidebar search query, per diagram
+                                                     (user request 2026-09-10). -->
+                                                <span t-if="state.sidebarSearchCounts[diagram.id]"
+                                                      class="badge rounded-pill bg-info text-white flex-shrink-0"
+                                                      style="font-size: 9px;"
+                                                      t-att-title="state.sidebarSearchCounts[diagram.id] + ' matching shape(s)'">
+                                                    <t t-esc="state.sidebarSearchCounts[diagram.id]"/>
+                                                </span>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Independent Action Menu Area -->
+                                <div class="pe-2 ms-auto">
+                                    <div class="dropdown">
+                                        <button class="btn btn-link btn-sm p-0 text-muted border-0 shadow-none" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fa fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-2" style="z-index: 2000; min-width: 140px;">
+                                            <li><a class="dropdown-item py-2 d-flex align-items-center" href="#" t-on-click.stop="() => this.duplicateDiagram(diagram.id)">
+                                                <i class="fa fa-copy me-2 text-primary opacity-75"></i> Duplicate</a>
+                                            </li>
+                                            <li><a class="dropdown-item py-2 d-flex align-items-center" href="#" t-on-click.stop="() => this.renameDiagram(diagram.id, diagram.name)">
+                                                <i class="fa fa-pencil me-2 text-warning opacity-75"></i> Rename</a>
+                                            </li>
+                                            <!-- Background image is now managed from the Diagram
+                                                 Settings panel (Settings button in the canvas
+                                                 header) instead of here - user decision 2026-09-09,
+                                                 to stop cramming record-level actions into this
+                                                 dropdown. -->
+                                            <li><hr class="dropdown-divider mx-2 opacity-25"/></li>
+                                            <li><a class="dropdown-item py-2 d-flex align-items-center text-danger" href="#" t-on-click.stop="() => this.deleteDiagram(diagram.id)">
+                                                <i class="fa fa-trash me-2 opacity-75"></i> Delete</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. MAIN WORKSPACE -->
+            <div class="o_flow_main flex-grow-1 position-relative overflow-hidden d-flex flex-column">
+                <div class="o_flow_header d-flex justify-content-between p-2 border-bottom bg-white">
+                    <div class="text-muted small align-self-center ms-2 d-flex align-items-center" style="gap: 14px;">
+                        <span>
+                            Studio <i class="fa fa-chevron-right mx-1 opacity-50"></i>
+                            <span class="text-dark fw-bold" t-esc="state.diagramName || 'No selection'"></span>
+                        </span>
+                        <!-- Diagram-scoped search (header): only the shapes in THIS
+                             diagram, highlights every match instead of jumping to one
+                             (user request 2026-09-10 - the sidebar search above searches
+                             every diagram instead). -->
+                        <div t-if="state.diagramId &amp;&amp; state.searchSettings.enable_header_search" class="input-group input-group-sm" style="width: 220px;">
+                            <span class="input-group-text bg-transparent border-end-0 py-0"><i class="fa fa-search text-muted" style="font-size: 11px;"></i></span>
+                            <input type="text" class="form-control form-control-sm border-start-0" placeholder="Search this diagram..."
+                                   t-model="state.headerSearchQuery"
+                                   t-on-input="() => this.onHeaderSearchInput()"/>
+                        </div>
+                    </div>
+                    <div t-if="state.diagramId" class="d-flex align-items-center me-2" style="gap: 8px;">
+                        <!-- Standalone compliance badge - its own thing, not glued onto
+                             the Settings button as a corner notification (user decision
+                             2026-09-09: "next to Settings, closer to the center"). Only
+                             the positive state shows here; issues are detailed in the
+                             Diagram Settings panel instead. A pure hover indicator, not
+                             clickable (user decision 2026-09-09). -->
+                        <span t-if="flowchartCompliance.checked &amp;&amp; flowchartCompliance.compliant"
+                              class="badge rounded-pill text-success bg-success-subtle d-flex align-items-center justify-content-center"
+                              style="width: 34px; height: 34px; font-size: 16px;"
+                              title="Flowchart Compliant - follows standard flowchart rules">
+                            <i class="fa fa-check-circle"></i>
+                        </span>
+                        <button class="btn btn-sm px-3 shadow-sm" t-attf-class="{{ state.showDiagramSettings ? 'btn-primary' : 'btn-light border' }}"
+                                t-on-click="() => this.toggleDiagramSettings()" title="Diagram Settings">
+                            <i class="fa fa-cog me-1"></i> Settings
+                        </button>
+                        <button t-attf-class="btn btn-sm shadow-sm {{ state.isDirty ? 'btn-success' : 'btn-light border' }}"
+                                t-on-click="() => this.saveCanvasData()"
+                                t-att-title="state.isDirty ? 'Save' : 'Saved'">
+                            <i t-attf-class="fa {{ state.isDirty ? 'fa-save' : 'fa-check' }}"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger shadow-sm" t-on-click="() => this.handleClose()" title="Close">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Confirmation Dialog Overlay -->
+                <div t-if="state.showExitDialog" class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center" style="z-index: 1000; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px);">
+                    <div class="bg-white rounded shadow-lg p-4 animate-slide-left" style="width: 400px;">
+                        <h5 class="fw-bold mb-3 border-bottom pb-2">Unsaved Changes</h5>
+                        <p class="text-muted small mb-4">You have unsaved changes in "<t t-esc="state.diagramName"/>". What would you like to do before closing?</p>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button class="btn btn-light border px-3" t-on-click="() => state.showExitDialog = false">Cancel</button>
+                            <button class="btn btn-danger px-3" t-on-click="() => this.discardAndClose()">Discard</button>
+                            <button class="btn btn-success px-4 fw-bold" t-on-click="() => this.saveAndClose()">Save &amp; Close</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div t-if="state.diagramId" class="workshop-container flex-grow-1 position-relative d-flex flex-column overflow-hidden bg-light">
+                    <!-- CANVAS VIEWPORT -->
+                    <div class="canvas-viewport flex-grow-1 position-relative overflow-hidden">
+                        <FlowCanvas canvasData="state.canvasData" 
+                                    mode="state.mode" 
+                                    setMode="(m) => this.setMode(m)"
+                                    setActiveNodeId="(id) => this.setActiveNodeId(id)"
+                                    setActiveEdgeId="(id) => this.setActiveEdgeId(id)"
+                                    magneticSnap="state.magneticSnap"
+                                    onTransformChange="(cam) => this.onTransformChange(cam)"
+                                    registerApi="(api) => this.registerCanvasApi(api)"
+                                    settings="state.flowSettings"
+                                    onSaveSnapshot="(dataUrl) => this.saveSnapshot(dataUrl)"
+                                    onChange="() => this.onCanvasChange()" />
+                    </div>
+
+                    <!-- ══════════════════════════════════════════════════
+                         PREMIUM BOTTOM TOOLBAR
+                         Groups: Navigation | Shapes | Tools | Actions
+                    ══════════════════════════════════════════════════ -->
+                    <div class="o_flow_bottom_toolbar custom-scrollbar position-absolute d-flex align-items-stretch rounded-3 shadow-lg border border-light"
+                         style="z-index: 1000; height: 46px; bottom: 32px; left: 0; right: 300px; width: fit-content; max-width: calc(100% - 300px); margin: 0 auto; overflow-x: auto; overflow-y: hidden; background: rgba(255,255,255,0.97); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+
+                        <!-- ── Group 1: Navigation ── -->
+                        <div class="d-flex align-items-center px-3 gap-1" style="border-right: 1px solid #e9ecef;">
+                            <!-- Pan -->
+                            <div class="flow-tool-btn" title="Pan (hold Space)" 
+                                 t-att-class="{ 'flow-tool-btn--active': state.mode === 'pan' }"
+                                 t-on-click="() => this.setMode('pan')">
+                                <i class="fa fa-hand-paper-o"></i>
+                            </div>
+                            <!-- Undo -->
+                            <div class="flow-tool-btn" title="Undo (Ctrl+Z)"
+                                 t-att-class="{ 'flow-tool-btn--disabled': state.historyIndex &lt;= 0 }"
+                                 t-on-click="() => this.handleToolbarAction('undo')">
+                                <i class="fa fa-undo"></i>
+                            </div>
+                            <!-- Redo -->
+                            <div class="flow-tool-btn" title="Redo (Ctrl+Shift+Z)"
+                                 t-att-class="{ 'flow-tool-btn--disabled': state.historyIndex >= state.history.length - 1 }"
+                                 t-on-click="() => this.handleToolbarAction('redo')">
+                                <i class="fa fa-repeat"></i>
+                            </div>
+                        </div>
+
+                        <!-- ── Group 2: Shapes ── -->
+                        <div class="d-flex align-items-center px-3 gap-1" style="border-right: 1px solid #e9ecef;">
+                            <!-- Start / End -->
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Start / End Node"
+                                 t-att-class="{ 'flow-tool-btn--shape-active flow-shape-green': state.mode === 'draw_start_end' }"
+                                 t-on-click="() => this.setMode('draw_start_end')">
+                                <div class="flow-shape-icon flow-shape-oval" style="border-color: #28a745; background: rgba(40,167,69,0.15);"></div>
+                            </div>
+                            <!-- Decision -->
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Decision (Diamond)"
+                                 t-att-class="{ 'flow-tool-btn--shape-active flow-shape-yellow': state.mode === 'draw_decision' }"
+                                 t-on-click="() => this.setMode('draw_decision')">
+                                <div class="flow-shape-icon flow-shape-diamond" style="border-color: #ffc107; background: rgba(255,193,7,0.15);"></div>
+                            </div>
+                            <!-- Process -->
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Process (Rectangle)"
+                                 t-att-class="{ 'flow-tool-btn--shape-active flow-shape-blue': state.mode === 'draw_process' }"
+                                 t-on-click="() => this.setMode('draw_process')">
+                                <div class="flow-shape-icon flow-shape-rect" style="border-color: #0d6efd; background: rgba(13,110,253,0.12);"></div>
+                            </div>
+                            <!-- I/O -->
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Input / Output (Parallelogram)"
+                                 t-att-class="{ 'flow-tool-btn--shape-active flow-shape-purple': state.mode === 'draw_data' }"
+                                 t-on-click="() => this.setMode('draw_data')">
+                                <div class="flow-shape-icon flow-shape-para" style="border-color: #6f42c1; background: rgba(111,66,193,0.12);"></div>
+                            </div>
+                            <!-- Comment (annotation, not part of the flow logic) -->
+                            <div class="flow-tool-btn flow-tool-btn--shape" title="Comment / Note (off to the side, not a flow step - hold on any shape to change its type)"
+                                 t-att-class="{ 'flow-tool-btn--shape-active': state.mode === 'draw_comment_shape' }"
+                                 t-on-click="() => this.setMode('draw_comment_shape')">
+                                <div class="flow-shape-icon flow-shape-rect" style="border-style: dashed; border-color: #64748b; background: rgba(100,116,139,0.12);"></div>
+                            </div>
+                        </div>
+
+                        <!-- ── Group 3: Tools ── -->
+                        <div class="d-flex align-items-center px-3 gap-1" style="border-right: 1px solid #e9ecef;">
+                            <!-- Select -->
+                            <div class="flow-tool-btn" title="Select &amp; Move (V)"
+                                 t-att-class="{ 'flow-tool-btn--active': state.mode === 'select' }"
+                                 t-on-click="() => this.setMode('select')">
+                                <i class="fa fa-mouse-pointer"></i>
+                            </div>
+                            <!-- Text -->
+                            <div class="flow-tool-btn" title="Add Text Node (T)"
+                                 t-att-class="{ 'flow-tool-btn--active': state.mode === 'draw_text' }"
+                                 t-on-click="() => this.setMode('draw_text')">
+                                <i class="fa fa-font"></i>
+                            </div>
+                            <!-- Pen / Connector -->
+                            <div class="flow-tool-btn" title="Draw Connector (P)"
+                                 t-att-class="{ 'flow-tool-btn--active': state.mode === 'draw_pen' }"
+                                 t-on-click="() => this.setMode('draw_pen')">
+                                <i class="fa fa-pencil"></i>
+                            </div>
+                        </div>
+
+                        <!-- ── Group 4: Actions ── -->
+                        <div class="d-flex align-items-center px-3 gap-1">
+                            <!-- Delete -->
+                            <div class="flow-tool-btn flow-tool-btn--danger" title="Delete Selected (Del)"
+                                 t-on-click="() => this.handleToolbarAction('delete')">
+                                <i class="fa fa-trash-o"></i>
+                            </div>
+                            <!-- Snap -->
+                            <div class="flow-tool-btn" t-attf-title="Magnetic Snap: {{ state.magneticSnap ? 'ON' : 'OFF' }} (click to toggle)"
+                                 t-att-class="{ 'flow-tool-btn--active': state.magneticSnap }"
+                                 t-on-click="() => this.toggleMagneticSnap()">
+                                <i class="fa fa-magnet"></i>
+                            </div>
+                            <!-- Capture: plain click, saves a snapshot internally (+ optional
+                                 local download, see Settings). Background Image lives in the
+                                 Diagram Settings panel now, not here (user feedback
+                                 2026-09-07, revised 2026-09-09). -->
+                            <div class="flow-tool-btn" title="Capture Screenshot"
+                                 t-on-click="() => this.handleToolbarAction('snapshot')">
+                                <i class="fa fa-camera"></i>
+                            </div>
+                            <!-- Auto Layout: click = Flow shapes only, hold = also place Comments by proximity to their Flow anchor -->
+                            <div class="flow-tool-btn" title="Auto-arrange Flow shapes into layers (hold to also place Comments)"
+                                 t-on-mousedown="() => this.onLayoutMouseDown()"
+                                 t-on-mouseup="() => this.onLayoutMouseUp()"
+                                 t-on-mouseleave="() => this.onLayoutMouseLeave()">
+                                <i class="fa fa-sitemap"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FOOTER (INFO BAR) -->
+                    <div t-if="state.diagramId" class="o_flow_footer border-top bg-white p-1 px-3 d-flex justify-content-between align-items-center shadow-sm" style="height: 32px; font-size: 11px; z-index: 100;">
+                        <div class="d-flex gap-3 text-muted">
+                            <span><i class="fa fa-cubes me-1"></i> <t t-esc="(state.canvasData.nodes || []).length"/> Elements</span>
+                            <span><i class="fa fa-share-alt me-1"></i> <t t-esc="(state.canvasData.edges || []).length"/> Connections</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="btn-group border rounded bg-light">
+                                <button class="btn btn-link btn-sm p-0 px-2 text-dark text-decoration-none border-end" t-on-click="() => this.zoomOut()">-</button>
+                                <span class="px-2 align-self-center fw-bold" style="min-width: 45px; text-align: center;"><t t-esc="Math.round((state.camera.zoom || 1) * 100)"/>%</span>
+                                <button class="btn btn-link btn-sm p-0 px-2 text-dark text-decoration-none border-start" t-on-click="() => this.zoomIn()">+</button>
+                            </div>
+                            <button class="btn btn-link btn-sm p-0 text-primary text-decoration-none fw-bold" t-on-click="() => this.resetZoom()">Reset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. FIXED DIMENSIONS RIGHT COLUMN COMPONENTS -->
+            <t t-set="activeItem" t-value="state.activeNodeId ? state.canvasData.nodes.find(n => n.id === state.activeNodeId) : state.activeEdgeId ? state.canvasData.edges.find(e => e.id === state.activeEdgeId) : null" />
+            
+            <!-- FIXED NAVIGATOR -->
+            <div t-if="state.diagramId" class="o_flow_fixed_navigator position-fixed bottom-0 end-0 m-0 border-start shadow-lg overflow-hidden">
+                <div class="px-3 py-2 bg-light border-bottom d-flex justify-content-between align-items-center">
+                    <span class="xx-small fw-bold text-muted">NAVIGATOR</span>
+                    <i class="fa fa-crosshairs text-muted cursor-pointer hover-text-primary" t-on-click="() => this.handleToolbarAction('reset_view')"></i>
+                </div>
+                <div class="navigator-canvas-wrapper p-2 bg-white">
+                    <canvas t-ref="minimapCanvas" class="w-100 h-100 rounded border shadow-inner cursor-pointer"
+                            t-on-mousedown="(ev) => this.onMinimapMouseDown(ev)"
+                            t-on-mousemove="(ev) => this.onMinimapMouseMove(ev)"
+                            t-on-mouseup="() => this.onMinimapMouseUp()"
+                            t-on-mouseleave="() => this.onMinimapMouseUp()"></canvas>
+                </div>
+            </div>
+
+            <!-- DIAGRAM SETTINGS (rename / background / info / flowchart compliance) -
+                 shares the exact same dock slot as the Properties inspector below;
+                 the two are mutually exclusive, whichever opens last covers the
+                 other (user decision 2026-09-09). -->
+            <div t-if="state.showDiagramSettings" class="o_flow_right_inspector position-fixed end-0 d-flex flex-column animate-slide-left">
+                <div class="p-2 border-bottom bg-white d-flex justify-content-between align-items-center" style="min-height: 40px; z-index: 100;">
+                    <div class="d-flex align-items-center ps-2">
+                         <i class="fa fa-cog text-primary me-2"></i>
+                         <h6 class="m-0 fw-bold text-dark small text-uppercase">Diagram Settings</h6>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <button class="btn btn-sm btn-link text-muted p-1 hover-text-danger" t-on-click="() => this.toggleDiagramSettings()" title="Close">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-3 flex-grow-1 overflow-auto custom-scrollbar">
+
+                    <div class="mb-4">
+                        <label class="x-small text-muted fw-bold mb-2 d-block text-uppercase">Name</label>
+                        <input type="text" class="form-control form-control-sm"
+                               t-model="state.editingDiagramName"
+                               t-on-blur="() => this.saveDiagramName(state.diagramId)"
+                               t-on-keydown="(ev) => ev.key === 'Enter' &amp;&amp; this.saveDiagramName(state.diagramId)"/>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="x-small text-muted fw-bold mb-2 d-block text-uppercase">Background Image</label>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-light border flex-grow-1" t-on-click="() => this.openDiagramBgImagePicker(state.diagramId)">
+                                <i class="fa fa-image me-1"></i>
+                                <t t-esc="state.canvasData.backgroundImage ? 'Change' : 'Set'"/>
+                            </button>
+                            <button t-if="state.canvasData.backgroundImage" class="btn btn-sm btn-outline-danger" t-on-click="() => this.clearDiagramBgImage(state.diagramId)" title="Remove background image">
+                                <i class="fa fa-trash-o"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="x-small text-muted fw-bold mb-2 d-block text-uppercase">Info</label>
+                        <div class="bg-light p-3 rounded border shadow-sm small">
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-muted">Start / End</span>
+                                <span class="fw-bold" t-esc="diagramInfo.startEndCount"/>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-top">
+                                <span class="text-muted">Decisions</span>
+                                <span class="fw-bold" t-esc="diagramInfo.decisionCount"/>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-top">
+                                <span class="text-muted">Processes</span>
+                                <span class="fw-bold" t-esc="diagramInfo.processCount"/>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-top">
+                                <span class="text-muted">I/O Shapes</span>
+                                <span class="fw-bold" t-esc="diagramInfo.dataCount"/>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-top">
+                                <span class="text-muted">Comments</span>
+                                <span class="fw-bold" t-esc="diagramInfo.commentCount"/>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-top" t-if="diagramInfo.textCount">
+                                <span class="text-muted">Text Labels</span>
+                                <span class="fw-bold" t-esc="diagramInfo.textCount"/>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-top">
+                                <span class="text-muted">Connections</span>
+                                <span class="fw-bold" t-esc="diagramInfo.connectionCount"/>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-top">
+                                <span class="text-muted">Background Image</span>
+                                <span class="fw-bold" t-esc="diagramInfo.hasBackgroundImage ? 'Yes' : 'No'"/>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-top">
+                                <span class="text-muted">Created</span>
+                                <span class="fw-bold" t-esc="diagramInfo.createdLabel"/>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-top">
+                                <span class="text-muted">Last Updated</span>
+                                <span class="fw-bold" t-esc="diagramInfo.updatedLabel"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="x-small text-muted fw-bold mb-2 d-block text-uppercase">Flowchart Compliance</label>
+                        <div t-attf-class="p-3 rounded border shadow-sm small {{ flowchartCompliance.compliant ? 'bg-light' : 'bg-warning-subtle' }}">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <i t-attf-class="fa {{ flowchartCompliance.compliant ? 'fa-check-circle text-success' : 'fa-exclamation-triangle text-warning' }}"></i>
+                                <span class="fw-bold" t-esc="flowchartCompliance.summary"/>
+                            </div>
+                            <ul t-if="flowchartCompliance.violations.length" class="mb-0 ps-3">
+                                <li t-foreach="flowchartCompliance.violations" t-as="violation" t-key="violation_index"
+                                    t-attf-class="{{ violation.nodeId ? 'cursor-pointer text-primary' : 'text-muted' }}"
+                                    t-on-click="() => violation.nodeId &amp;&amp; this.setActiveNodeId(violation.nodeId)"
+                                    t-esc="violation.message"/>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- SLIDING INSPECTOR -->
+            <div t-if="activeItem" class="o_flow_right_inspector position-fixed end-0 d-flex flex-column animate-slide-left">
+                
+                <div class="p-2 border-bottom bg-white d-flex justify-content-between align-items-center" style="min-height: 40px; z-index: 100;">
+                    <div class="d-flex align-items-center ps-2">
+                         <i class="fa fa-sliders text-primary me-2"></i>
+                         <h6 class="m-0 fw-bold text-dark small text-uppercase">Properties</h6>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <!-- Pins this shape's highlight so it stays lit even after
+                             it's deselected, until toggled off again (user request
+                             2026-09-10) - independent of the double-click highlight,
+                             which clears on the very next click. -->
+                        <button t-if="state.activeNodeId"
+                                t-attf-class="btn btn-sm btn-link p-1 {{ isActiveNodeStickyHighlighted ? 'text-danger' : 'text-muted' }}"
+                                t-on-click="() => this.toggleStickyHighlight()"
+                                t-att-title="isActiveNodeStickyHighlighted ? 'Unpin highlight' : 'Pin highlight'">
+                            <i class="fa fa-thumb-tack"></i>
+                        </button>
+                        <button class="btn btn-sm btn-link text-muted p-1 hover-text-danger" t-on-click="() => this.closeInspector()" title="Close">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-3 flex-grow-1 overflow-auto custom-scrollbar">
+                    
+                    <div class="mb-4">
+                        <label class="x-small text-muted fw-bold mb-2 d-block text-uppercase">Identification</label>
+                        <div class="bg-light p-3 rounded border shadow-sm">
+                            <label class="xx-small text-secondary mb-1 d-block">Label / Text</label>
+                            <textarea class="form-control form-control-sm border-0 bg-transparent p-0" rows="2" 
+                                      t-att-value="activeItem.label || ''" 
+                                      t-on-input="(ev) => this.updateActiveItemProperty('label', ev.target.value)" 
+                                      placeholder="Untitled Node"></textarea>
+                        </div>
+                    </div>
+
+                    <t t-if="state.activeNodeId">
+                        <div class="mb-4">
+                            <label class="x-small text-muted fw-bold mb-2 d-block text-uppercase">Appearance</label>
+                            <div class="bg-light p-3 rounded border shadow-sm">
+                                <label class="xx-small text-secondary mb-2 d-block">Tool Body Color</label>
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-blue" t-att-class="{ 'active ring': activeItem.color === '#bae1ff' }" t-on-click="() => this.updateActiveItemProperty('color', '#bae1ff')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-orange" t-att-class="{ 'active ring': activeItem.color === '#ffdfba' }" t-on-click="() => this.updateActiveItemProperty('color', '#ffdfba')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-green" t-att-class="{ 'active ring': activeItem.color === '#a8e6cf' }" t-on-click="() => this.updateActiveItemProperty('color', '#a8e6cf')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-red" t-att-class="{ 'active ring': activeItem.color === '#ffb7b2' }" t-on-click="() => this.updateActiveItemProperty('color', '#ffb7b2')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-purple" t-att-class="{ 'active ring': activeItem.color === '#e0bbe4' }" t-on-click="() => this.updateActiveItemProperty('color', '#e0bbe4')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-yellow" t-att-class="{ 'active ring': activeItem.color === '#ffffba' }" t-on-click="() => this.updateActiveItemProperty('color', '#ffffba')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-teal" t-att-class="{ 'active ring': activeItem.color === '#95e1d3' }" t-on-click="() => this.updateActiveItemProperty('color', '#95e1d3')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-pink" t-att-class="{ 'active ring': activeItem.color === '#ffc8dd' }" t-on-click="() => this.updateActiveItemProperty('color', '#ffc8dd')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-dark" t-att-class="{ 'active ring': activeItem.color === '#1e293b' }" t-on-click="() => this.updateActiveItemProperty('color', '#1e293b')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-white" t-att-class="{ 'active ring': activeItem.color === '#ffffff' }" t-on-click="() => this.updateActiveItemProperty('color', '#ffffff')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-black" t-att-class="{ 'active ring': activeItem.color === '#000000' }" t-on-click="() => this.updateActiveItemProperty('color', '#000000')"></div>
+                                </div>
+
+                                <label class="xx-small text-secondary mb-2 d-block border-top pt-2">Text Color</label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-blue" t-att-class="{ 'active ring': activeItem.textColor === '#bae1ff' }" t-on-click="() => this.updateActiveItemProperty('textColor', '#bae1ff')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-orange" t-att-class="{ 'active ring': activeItem.textColor === '#ffdfba' }" t-on-click="() => this.updateActiveItemProperty('textColor', '#ffdfba')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-green" t-att-class="{ 'active ring': activeItem.textColor === '#a8e6cf' }" t-on-click="() => this.updateActiveItemProperty('textColor', '#a8e6cf')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-red" t-att-class="{ 'active ring': activeItem.textColor === '#ffb7b2' }" t-on-click="() => this.updateActiveItemProperty('textColor', '#ffb7b2')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-purple" t-att-class="{ 'active ring': activeItem.textColor === '#e0bbe4' }" t-on-click="() => this.updateActiveItemProperty('textColor', '#e0bbe4')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-yellow" t-att-class="{ 'active ring': activeItem.textColor === '#ffffba' }" t-on-click="() => this.updateActiveItemProperty('textColor', '#ffffba')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-teal" t-att-class="{ 'active ring': activeItem.textColor === '#95e1d3' }" t-on-click="() => this.updateActiveItemProperty('textColor', '#95e1d3')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-pink" t-att-class="{ 'active ring': activeItem.textColor === '#ffc8dd' }" t-on-click="() => this.updateActiveItemProperty('textColor', '#ffc8dd')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-dark" t-att-class="{ 'active ring': activeItem.textColor === '#1e293b' || !activeItem.textColor }" t-on-click="() => this.updateActiveItemProperty('textColor', '#1e293b')"></div>
+                                    <div class="rounded-circle cursor-pointer border shadow-sm swatch color-white bg-white" t-att-class="{ 'active ring': activeItem.textColor === '#ffffff' }" t-on-click="() => this.updateActiveItemProperty('textColor', '#ffffff')"></div>
+                                </div>
+
+                                <t t-if="activeItem.isCommentCategory or activeItem.type === 'comment'">
+                                    <label class="xx-small text-secondary mb-2 d-block border-top pt-2">Background Image</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="file" accept="image/*" class="form-control form-control-sm" t-on-change="(ev) => this.onNodeBgImageChange(ev)"/>
+                                        <button t-if="activeItem.bgImage" class="btn btn-sm btn-outline-danger" title="Remove image" t-on-click="() => this.updateActiveItemProperty('bgImage', false)">
+                                            <i class="fa fa-times"></i>
+                                        </button>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="x-small text-muted fw-bold mb-2 d-block text-uppercase">Typography</label>
+                            <div class="bg-light p-3 rounded border shadow-sm">
+                                <div class="d-flex gap-1 mb-3">
+                                    <button class="btn btn-sm btn-white flex-grow-1 border shadow-xs py-1" t-attf-class="{{ activeItem.bold ? 'bg-primary text-white border-primary' : 'bg-white' }}" t-on-click="() => this.updateActiveItemProperty('bold', !activeItem.bold)">
+                                        <i class="fa fa-bold"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-white flex-grow-1 border shadow-xs py-1" t-attf-class="{{ activeItem.italic ? 'bg-primary text-white border-primary' : 'bg-white' }}" t-on-click="() => this.updateActiveItemProperty('italic', !activeItem.italic)">
+                                        <i class="fa fa-italic"></i>
+                                    </button>
+                                    <div class="vr mx-1 align-self-center opacity-50" style="height: 18px; min-height: 18px;"></div>
+                                    <button class="btn btn-sm btn-white flex-grow-1 border shadow-xs py-1" t-attf-class="{{ activeItem.align === 'left' ? 'bg-primary text-white border-primary' : 'bg-white' }}" t-on-click="() => this.updateActiveItemProperty('align', 'left')">
+                                        <i class="fa fa-align-left"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-white flex-grow-1 border shadow-xs py-1" t-attf-class="{{ (activeItem.align === 'center' || !activeItem.align) ? 'bg-primary text-white border-primary' : 'bg-white' }}" t-on-click="() => this.updateActiveItemProperty('align', 'center')">
+                                        <i class="fa fa-align-center"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-white flex-grow-1 border shadow-xs py-1" t-attf-class="{{ activeItem.align === 'right' ? 'bg-primary text-white border-primary' : 'bg-white' }}" t-on-click="() => this.updateActiveItemProperty('align', 'right')">
+                                        <i class="fa fa-align-right"></i>
+                                    </button>
+                                </div>
+                                <select class="form-select form-select-sm border shadow-xs py-1" t-on-change="(ev) => this.updateActiveItemProperty('fontSize', ev.target.value)">
+                                    <option value="12" t-att-selected="activeItem.fontSize === '12'">Small (12px)</option>
+                                    <option value="14" t-att-selected="activeItem.fontSize === '14' || !activeItem.fontSize">Normal (14px)</option>
+                                    <option value="18" t-att-selected="activeItem.fontSize === '18'">Medium (18px)</option>
+                                    <option value="24" t-att-selected="activeItem.fontSize === '24'">Large (24px)</option>
+                                    <option value="32" t-att-selected="activeItem.fontSize === '32'">X-Large (32px)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </t>
+
+                    <div class="mb-4">
+                        <label class="x-small text-muted fw-bold mb-2 d-block text-uppercase">Description</label>
+                        <div class="bg-light p-3 rounded border shadow-sm">
+                            <textarea class="form-control form-control-sm border-0 bg-transparent p-0" rows="3" 
+                                      placeholder="Brief summary..." 
+                                      t-att-value="activeItem.description || ''"
+                                      t-on-input="(ev) => this.updateActiveItemProperty('description', ev.target.value)"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- GEOMETRY SECTION (READ-ONLY AT BOTTOM) -->
+                    <div t-if="state.activeNodeId" class="mb-2 opacity-75">
+                        <label class="x-small text-muted fw-bold mb-2 d-block text-uppercase">Geometry Details</label>
+                        <div class="bg-white p-2 rounded border border-dashed">
+                            <div class="row g-1 mb-1">
+                                <div class="col-6">
+                                    <div class="d-flex justify-content-between xx-small text-muted">
+                                        <span>Position X:</span>
+                                        <span class="fw-bold" t-esc="Math.round(activeItem.x)"/>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex justify-content-between xx-small text-muted">
+                                        <span>Position Y:</span>
+                                        <span class="fw-bold" t-esc="Math.round(activeItem.y)"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-1">
+                                <div class="col-6">
+                                    <div class="d-flex justify-content-between xx-small text-muted">
+                                        <span>Width:</span>
+                                        <span class="fw-bold" t-esc="Math.round(activeItem.width || 0)"/>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex justify-content-between xx-small text-muted">
+                                        <span>Height:</span>
+                                        <span class="fw-bold" t-esc="Math.round(activeItem.height || 0)"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

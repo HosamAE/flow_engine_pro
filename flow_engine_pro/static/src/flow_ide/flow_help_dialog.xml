@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="flow_engine_pro.FlowHelpDialog" owl="1">
+        <Dialog title="'Flow Engine Pro — Help &amp; About'" size="'lg'">
+            <div class="p-2" style="max-height: 70vh; overflow-y: auto;">
+
+                <h6 class="fw-bold text-uppercase x-small text-muted mb-2">How to use</h6>
+                <ul class="small mb-4 ps-3">
+                    <li class="mb-1">Pick a shape from the bottom toolbar, then click the canvas to place it.</li>
+                    <li class="mb-1">Draw a connector with the Pen tool, or drag from a shape's edge.</li>
+                    <li class="mb-1">Switch to the Select tool before clicking a shape or line to edit it in the Properties panel.</li>
+                    <li class="mb-1">Click <b>Settings</b> (top right, while a diagram is open) to rename the diagram, set a background image, see diagram info, and check flowchart compliance.</li>
+                    <li class="mb-1">Use the Navigator (bottom right) to jump around a large diagram - click anywhere on the minimap.</li>
+                    <li class="mb-1">Hold the Layout button to auto-arrange Flow shapes into clean layers (a plain click arranges Flow shapes only).</li>
+                </ul>
+
+                <h6 class="fw-bold text-uppercase x-small text-muted mb-2">Toolbar reference</h6>
+                <div class="row small mb-4" style="row-gap: 8px;">
+                    <div class="col-6 d-flex align-items-center gap-2"><i class="fa fa-hand-paper-o text-secondary" style="width:16px;"></i> Pan the canvas (hold Space)</div>
+                    <div class="col-6 d-flex align-items-center gap-2"><i class="fa fa-undo text-secondary" style="width:16px;"></i> Undo (Ctrl+Z)</div>
+                    <div class="col-6 d-flex align-items-center gap-2"><i class="fa fa-repeat text-secondary" style="width:16px;"></i> Redo (Ctrl+Shift+Z)</div>
+                    <div class="col-6 d-flex align-items-center gap-2"><i class="fa fa-mouse-pointer text-secondary" style="width:16px;"></i> Select &amp; move (V)</div>
+                    <div class="col-6 d-flex align-items-center gap-2"><div class="flow-shape-icon flow-shape-oval" style="border-color:#28a745; background:rgba(40,167,69,.15); width:16px; height:11px;"></div> Start / End shape</div>
+                    <div class="col-6 d-flex align-items-center gap-2"><div class="flow-shape-icon flow-shape-diamond" style="border-color:#ffc107; background:rgba(255,193,7,.15); width:16px; height:16px;"></div> Decision shape</div>
+                    <div class="col-6 d-flex align-items-center gap-2"><div class="flow-shape-icon flow-shape-rect" style="border-color:#0d6efd; background:rgba(13,110,253,.12); width:16px; height:11px;"></div> Process shape</div>
+                    <div class="col-6 d-flex align-items-center gap-2"><div class="flow-shape-icon flow-shape-para" style="border-color:#6f42c1; background:rgba(111,66,193,.12); width:16px; height:11px;"></div> Input / Output shape</div>
+                    <div class="col-6 d-flex align-items-center gap-2"><div class="flow-shape-icon flow-shape-rect" style="border-style:dashed; border-color:#64748b; background:rgba(100,116,139,.12); width:16px; height:11px;"></div> Comment / note (annotation, not part of the flow)</div>
+                    <div class="col-6 d-flex align-items-center gap-2"><i class="fa fa-font text-secondary" style="width:16px;"></i> Add a text label (T)</div>
+                    <div class="col-6 d-flex align-items-center gap-2"><i class="fa fa-pencil text-secondary" style="width:16px;"></i> Draw a connector (P)</div>
+                    <div class="col-6 d-flex align-items-center gap-2"><i class="fa fa-trash-o text-secondary" style="width:16px;"></i> Delete selection (Del)</div>
+                    <div class="col-6 d-flex align-items-center gap-2"><i class="fa fa-magnet text-secondary" style="width:16px;"></i> Toggle magnetic snap</div>
+                    <div class="col-6 d-flex align-items-center gap-2"><i class="fa fa-camera text-secondary" style="width:16px;"></i> Capture a PNG snapshot</div>
+                    <div class="col-6 d-flex align-items-center gap-2"><i class="fa fa-sitemap text-secondary" style="width:16px;"></i> Auto-layout (hold to include comments)</div>
+                </div>
+
+                <h6 class="fw-bold text-uppercase x-small text-muted mb-2">Flowchart principles (used for the compliance check)</h6>
+                <ul class="small mb-4 ps-3">
+                    <li class="mb-1">The diagram needs at least one <b>Start</b> shape (no incoming line) and one <b>End</b> shape (no outgoing line).</li>
+                    <li class="mb-1">Every shape must be connected to something - no shape should be left floating with no lines at all.</li>
+                    <li class="mb-1">A <b>Decision</b> shape must have at least two outgoing lines (a two-way Yes/No, or a multi-way switch), each carrying its own distinct label.</li>
+                    <li class="mb-1">Only a Decision shape may branch into more than one outgoing line - any other shape branching means a Decision should be used instead.</li>
+                    <li class="mb-1">Every shape (other than Start) needs at least one incoming line, and every shape (other than End) needs at least one outgoing line.</li>
+                </ul>
+                <p class="small text-muted">The green "Flowchart Compliant" badge at the bottom of the canvas only appears once all of the above are satisfied. If something's off, open <b>Settings</b> to see exactly what's flagged and why.</p>
+
+                <h6 class="fw-bold text-uppercase x-small text-muted mb-2">About</h6>
+                <div class="small text-muted">
+                    <div>Odoo Flow Engine Pro</div>
+                    <div>Author: HosamAE &#183; License: OPL-1 (paid, usable &amp; extensible, not resellable)</div>
+                </div>
+            </div>
+            <t t-set-slot="footer">
+                <button class="btn btn-primary" t-on-click="() => this.props.close()">Close</button>
+            </t>
+        </Dialog>
+    </t>
+</templates>

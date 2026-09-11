@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="flow_engine_pro.FlowToolbar" owl="1">
+
+        <!-- Unified Premium Dock -->
+        <div class="o_unified_dock card shadow-lg d-flex flex-row align-items-center rounded-pill bg-white border px-3 py-2" 
+             style="gap:12px; backdrop-filter: blur(8px); background: rgba(255,255,255,0.9) !important; border: 1px solid rgba(0,0,0,0.08) !important;">
+
+            <!-- Group 1: Undo / Redo -->
+            <div class="d-flex align-items-center" style="gap:8px;">
+                <button class="sys-btn" t-on-click="() => props.onAction('undo')" title="Undo (Ctrl+Z)">
+                    <i class="fa fa-undo" style="font-size:17px;"></i>
+                    <span class="sys-label">Undo</span>
+                </button>
+                <button class="sys-btn" t-on-click="() => props.onAction('redo')" title="Redo (Ctrl+Y)">
+                    <i class="fa fa-repeat" style="font-size:17px;"></i>
+                    <span class="sys-label">Redo</span>
+                </button>
+            </div>
+
+            <div class="tool-sep" style="height:34px; width:1.5px; opacity:0.6;"></div>
+
+            <!-- Group 2: Shape Drawing Tools -->
+            <div class="d-flex align-items-center" style="gap:8px;">
+                <div t-attf-class="tool-btn {{ props.mode === 'draw_oval' ? 'active' : '' }}"
+                     t-on-click="() => this.toggleTool('draw_oval')" title="Start / End (Oval)">
+                    <div style="width:28px;height:16px;background:#a8e6cf;border-radius:50%;border:1.5px solid #3d8c40;"></div>
+                    <span class="tool-label">Start/End</span>
+                </div>
+                <div t-attf-class="tool-btn {{ props.mode === 'draw_diamond' ? 'active' : '' }}"
+                     t-on-click="() => this.toggleTool('draw_diamond')" title="Decision (Diamond)">
+                    <div style="width:18px;height:18px;background:#ffdfba;border:1.5px solid #d4a017;transform:rotate(45deg);margin:0 4px;"></div>
+                    <span class="tool-label">Decision</span>
+                </div>
+                <div t-attf-class="tool-btn {{ props.mode === 'draw_rect' ? 'active' : '' }}"
+                     t-on-click="() => this.toggleTool('draw_rect')" title="Process (Rectangle)">
+                    <div style="width:28px;height:16px;background:#bae1ff;border:1.5px solid #205493;border-radius:2px;"></div>
+                    <span class="tool-label">Process</span>
+                </div>
+                <div t-attf-class="tool-btn {{ props.mode === 'draw_para' ? 'active' : '' }}"
+                     t-on-click="() => this.toggleTool('draw_para')" title="I/O Data (Parallelogram)">
+                    <div style="width:28px;height:16px;background:#d5c6f0;border:1.5px solid #6a4fcf;transform:skewX(-15deg);"></div>
+                    <span class="tool-label">I/O</span>
+                </div>
+            </div>
+
+            <div class="tool-sep" style="height:34px; width:1.5px; opacity:0.6;"></div>
+
+            <!-- Group 3: Interaction Tools (Text, Pen, Select) -->
+            <div class="d-flex align-items-center" style="gap:8px;">
+                <div t-attf-class="tool-btn {{ props.mode === 'select' ? 'active' : '' }}"
+                     t-on-click="() => this.toggleTool('select')" title="Selection Tool">
+                    <i class="fa fa-mouse-pointer" t-attf-style="font-size:18px;color:{{ props.mode === 'select' ? '#0d6efd' : '#adb5bd' }};"></i>
+                    <span class="tool-label">Select</span>
+                </div>
+                <div t-attf-class="tool-btn {{ props.mode === 'draw_text' ? 'active' : '' }}"
+                     t-on-click="() => this.toggleTool('draw_text')" title="Text Tool (T)">
+                    <i class="fa fa-font" t-attf-style="font-size:18px;color:{{ props.mode === 'draw_text' ? '#0d6efd' : '#adb5bd' }};"></i>
+                    <span class="tool-label">Text</span>
+                </div>
+                <div t-attf-class="tool-btn {{ props.mode === 'draw_pen' ? 'active' : '' }}"
+                     t-on-click="() => this.toggleTool('draw_pen')" title="Pen (Lines &amp; Points)">
+                    <i class="fa fa-pencil" t-attf-style="font-size:18px;color:{{ props.mode === 'draw_pen' ? '#0d6efd' : '#adb5bd' }};"></i>
+                    <span class="tool-label">Pen</span>
+                </div>
+            </div>
+
+            <div class="tool-sep" style="height:34px; width:1.5px; opacity:0.6;"></div>
+
+            <!-- Group 4: Utilities (Snap, Delete, Camera) -->
+            <div class="d-flex align-items-center" style="gap:8px;">
+                <button class="sys-btn" style="color:#dc3545;" t-on-click="() => props.onAction('delete')" title="Delete (Del)">
+                    <i class="fa fa-trash-o" style="font-size:18px;"></i>
+                    <span class="sys-label">Delete</span>
+                </button>
+                <button class="sys-btn" t-on-click="() => props.toggleMagneticSnap()"
+                        t-attf-style="color: {{ props.magneticSnap ? '#0d6efd' : '#adb5bd' }};">
+                    <i class="fa fa-magnet" style="font-size:18px;"></i>
+                    <span class="sys-label" t-esc="props.magneticSnap ? 'Snap ON' : 'Snap OFF'"></span>
+                </button>
+                <button class="sys-btn" t-on-click="() => props.onAction('snapshot')" title="Take Snapshot">
+                    <i class="fa fa-camera" style="font-size:18px;"></i>
+                    <span class="sys-label">Capture</span>
+                </button>
+            </div>
+
+        </div>
+
+        <style>
+            .o_unified_dock {
+                transition: all 0.3s ease;
+                user-select: none;
+            }
+            .tool-btn {
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                cursor: pointer; border-radius: 10px; padding: 6px 10px;
+                transition: all 0.2s;
+            }
+            .tool-btn:hover { background: rgba(13,110,253,0.08); transform: translateY(-2px); }
+            .tool-btn.active { background: rgba(13,110,253,0.12); box-shadow: inset 0 0 0 2px #0d6efd; }
+            .tool-label { font-size: 0.65rem; font-weight: 500; color: #495057; margin-top: 4px; white-space: nowrap; }
+            .tool-sep { width: 1px; height: 24px; background: #e9ecef; flex-shrink: 0; }
+            .sys-btn {
+                display: flex; flex-direction: column; align-items: center;
+                background: none; border: none; cursor: pointer; color: #495057;
+                padding: 6px 10px; border-radius: 10px; transition: all 0.2s;
+            }
+            .sys-btn:hover { background: rgba(0,0,0,0.05); transform: translateY(-2px); }
+            .sys-label { font-size: 0.65rem; font-weight: 500; margin-top: 4px; white-space: nowrap; }
+        </style>
+    </t>
+</templates>
