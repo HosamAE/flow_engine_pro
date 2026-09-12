@@ -10,15 +10,6 @@
         - Hybrid Storage (JSON/SQL)
     """,
     'author': 'HosamAE',
-    # The Apps Store renders these as real, clickable metadata on the
-    # listing page itself - unlike the LinkedIn button inside
-    # static/description/index.html, which the Store's HTML sanitizer
-    # strips the href from on upload (external links inside the long
-    # description get neutered; found live on the published listing,
-    # 2026-09-12). 'website' is the standard manifest key the Store uses
-    # for the author's outbound link, regardless of what kind of site it
-    # points to.
-    'website': 'https://www.linkedin.com/in/hossameldeen-eissa/',
     'support': 'hossama.eissa@gmail.com',
     'depends': ['base', 'web'],
     'data': [
