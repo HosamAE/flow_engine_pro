@@ -65,6 +65,12 @@ export class FlowIDE extends Component {
       searchQuery: '',
       sidebarSearchCounts: {}, // diagramId -> match count, for the live per-row badge
       headerSearchQuery: '',
+      // Store-review nudge (see _maybeShowReviewPrompt) - a marketing-page
+      // callout asking for a review reaches almost nobody at the right
+      // moment (people read that page BEFORE installing, not after using
+      // it), so this shows once, inside the product itself, after the user
+      // has actually saved real work a few times.
+      showReviewPrompt: false,
     });
 
     const handleKeyDown = (ev) => {
@@ -252,9 +258,43 @@ export class FlowIDE extends Component {
       // the diagram's one internal thumbnail, not just the explicit
       // Capture button.
       if (this._canvasApi) this.saveSnapshot(this._canvasApi.captureSnapshotDataUrl());
+      this._maybeShowReviewPrompt();
     } catch (e) {
       console.error('Failed to save:', e);
     }
+  }
+
+  // Shows a small, dismissible nudge to rate the app on the Odoo Apps
+  // Store, once, after the 3rd successful save in this browser - a save
+  // means they actually built something real, not just opened the app
+  // once. Silent forever after either a real dismiss or after it's shown
+  // once, so this can never nag.
+  _maybeShowReviewPrompt() {
+    const DISMISSED_KEY = 'flow_engine_pro_review_dismissed';
+    const COUNT_KEY = 'flow_engine_pro_review_save_count';
+    const THRESHOLD = 3;
+    try {
+      if (localStorage.getItem(DISMISSED_KEY)) return;
+      const count = parseInt(localStorage.getItem(COUNT_KEY) || '0', 10) + 1;
+      localStorage.setItem(COUNT_KEY, String(count));
+      if (count === THRESHOLD) {
+        this.state.showReviewPrompt = true;
+      }
+    } catch (e) {
+      // localStorage unavailable (private browsing, etc.) - just skip.
+    }
+  }
+
+  dismissReviewPrompt() {
+    this.state.showReviewPrompt = false;
+    try {
+      localStorage.setItem('flow_engine_pro_review_dismissed', '1');
+    } catch (e) { /* ignore */ }
+  }
+
+  openReviewPage() {
+    window.open('https://apps.odoo.com/apps/modules/18.0/flow_engine_pro#comment', '_blank', 'noopener,noreferrer');
+    this.dismissReviewPrompt();
   }
 
   // Persists a PNG data URL (from FlowCanvas's onSaveSnapshot prop, or
