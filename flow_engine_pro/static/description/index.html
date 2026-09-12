@@ -215,43 +215,32 @@
         <h3 style="margin: 0 0 6px 0; font-size: 22px; font-weight: 800; color: #1e1b4b; font-family: 'Plus Jakarta Sans', sans-serif;">
             Developed &amp; Maintained by HosamAE
         </h3>
-        <p style="font-size: 15px; color: #475569; max-width: 600px; margin: 0 auto 24px auto; font-family: 'Outfit', sans-serif; line-height: 1.6;">
-            Need help, custom diagram rules, enterprise integration, or feature requests? Reach out directly via email or connect on LinkedIn.
+        <p style="font-size: 15px; color: #475569; max-width: 600px; margin: 0 auto 12px auto; font-family: 'Outfit', sans-serif; line-height: 1.6;">
+            Need help, custom diagram rules, enterprise integration, or feature requests? Reach out directly via email, or find me on LinkedIn via the <strong>Website</strong> link on this listing.
         </p>
 
         <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; align-items: center;">
-            <!-- Email Button -->
+            <!-- Email Button. This is the only outbound contact link that
+                 can actually be clickable here - confirmed live (2026-09-12)
+                 that the Apps Store's HTML sanitizer downgrades every OTHER
+                 <a href="https://...">  in the description body to a plain
+                 <span> (keeping the now-inert href as dead weight), for any
+                 external non-mailto link - checked against another
+                 published module by the same author and it has the exact
+                 same downgraded <span href=...> artifact, so this is a
+                 platform-wide policy, not something fixable from here. The
+                 manifest's 'website' field (see __manifest__.py) is the
+                 reliable way to give buyers a real clickable outbound link -
+                 it renders as its own "Website" row on the listing page,
+                 outside this sanitized description text, and was confirmed
+                 live to render as a real <a href> there. -->
             <a href="mailto:hossama.eissa@gmail.com" style="display: inline-flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid #99f6e4; color: #0f766e; padding: 12px 24px; border-radius: 999px; font-size: 14px; font-weight: 700; text-decoration: none; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08); font-family: 'Plus Jakarta Sans', sans-serif;">
                 <span style="font-size: 17px;">&#9993;</span> hossama.eissa@gmail.com
             </a>
-
-            <!-- LinkedIn Button. Two issues found live on the published
-                 Store listing (2026-09-12), both from the Store's HTML
-                 sanitizer being stricter than a normal browser:
-                 1) it strips 'background'/'box-shadow' from inline styles
-                    but keeps 'color', so the original white-on-solid-blue
-                    design (color:#ffffff on a blue background) rendered as
-                    invisible white-on-white text and icon. Fixed by using
-                    white/transparent background + colored text+border
-                    instead, matching the Email button's pattern above.
-                 2) even after that fix, the href itself still wasn't
-                    clickable - rendered as plain text. The Email link
-                    right above it (no target/rel attributes) DOES work,
-                    so target="_blank" rel="noopener noreferrer" - the one
-                    structural difference - is the next thing being tried,
-                    on the theory that the sanitizer rejects the whole tag
-                    rather than just stripping attributes it doesn't
-                    recognize. If this still doesn't make it clickable, the
-                    Store may simply not allow non-mailto external links in
-                    the description body at all - the manifest's 'website'
-                    field (see __manifest__.py) is the reliable fallback
-                    either way, since it renders outside this sanitized
-                    description text entirely. -->
-            <a href="https://www.linkedin.com/in/hossameldeen-eissa/" style="display: inline-flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid #0077b5; color: #0077b5; padding: 12px 24px; border-radius: 999px; font-size: 14px; font-weight: 700; text-decoration: none; box-shadow: 0 4px 12px rgba(0, 119, 181, 0.08); font-family: 'Plus Jakarta Sans', sans-serif;">
-                <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                LinkedIn Profile
-            </a>
         </div>
+        <p style="font-size: 13px; color: #94a3b8; margin: 14px 0 0 0; font-family: 'Outfit', sans-serif;">
+            LinkedIn: linkedin.com/in/hossameldeen-eissa
+        </p>
 
         <p style="font-size: 12.5px; color: #94a3b8; margin: 20px 0 0 0; font-family: 'Outfit', sans-serif;">
             &copy; 2026 HosamAE. All rights reserved.
