@@ -11,6 +11,8 @@
     """,
     'author': 'HosamAE',
     'support': 'hossama.eissa@gmail.com',
+    'price': 67.0,
+    'currency': 'USD',
     'depends': ['base', 'web'],
     'data': [
         'security/flow_security_groups.xml',
